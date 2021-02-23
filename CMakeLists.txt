@@ -68,7 +68,7 @@ set_target_properties(${TARGET_NAME} PROPERTIES LINKER_LANGUAGE CXX)
 add_subdirectory(convenienceFunctionForSoci) 
 
 ####### create executable
-OPTION(BUILD_TESTS "enable tests" OFF)
+OPTION(BUILD_TESTS "enable tests" ON)
 IF(BUILD_TESTS)
   if (CMAKE_BINARY_DIR)
     target_compile_definitions(${TEST_TARGET_NAME} PRIVATE PATH_TO_BINARY="${CMAKE_BINARY_DIR}")
