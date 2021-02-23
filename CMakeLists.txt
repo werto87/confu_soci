@@ -68,36 +68,37 @@ set_target_properties(${TARGET_NAME} PROPERTIES LINKER_LANGUAGE CXX)
 add_subdirectory(convenienceFunctionForSoci) 
 
 ####### create executable
-OPTION(BUILD_TESTS "enable tests" ON)
+OPTION(BUILD_TESTS "enable tests" OFF)
 IF(BUILD_TESTS)
-    enable_testing()
-    set(TEST_TARGET_NAME ${TARGET_NAME}_test)
-    set(TEST_SOURCES_${TARGET_NAME})
-    set(TEST_HEADER_${TARGET_NAME})
-    add_subdirectory(test) 
-    add_executable(${TEST_TARGET_NAME}
-      ${HEADER_${TARGET_NAME}}
-      ${SOURCES_${TARGET_NAME}}
-      ${TEST_HEADER_${TARGET_NAME}}
-      ${TEST_SOURCES_${TARGET_NAME}}
-    )
-    target_link_libraries(${TEST_TARGET_NAME}
-      ${PROJECT_OPTIONS}
-      CONAN_PKG::catch2
-      CONAN_PKG::boost
-      CONAN_PKG::sqlite3
-      CONAN_PKG::soci
-      CONAN_PKG::magic_enum
-    )
+  if (CMAKE_BINARY_DIR)
+    target_compile_definitions(${TEST_TARGET_NAME} PRIVATE PATH_TO_BINARY="${CMAKE_BINARY_DIR}")
+  endif()
+  enable_testing()
+  set(TEST_TARGET_NAME ${TARGET_NAME}_test)
+  set(TEST_SOURCES_${TARGET_NAME})
+  set(TEST_HEADER_${TARGET_NAME})
+  add_subdirectory(test) 
+  add_executable(${TEST_TARGET_NAME}
+    ${HEADER_${TARGET_NAME}}
+    ${SOURCES_${TARGET_NAME}}
+    ${TEST_HEADER_${TARGET_NAME}}
+    ${TEST_SOURCES_${TARGET_NAME}}
+  )
+  target_link_libraries(${TEST_TARGET_NAME}
+    ${PROJECT_OPTIONS}
+    CONAN_PKG::catch2
+    CONAN_PKG::boost
+    CONAN_PKG::sqlite3
+    CONAN_PKG::soci
+    CONAN_PKG::magic_enum
+  )
 target_include_directories(${TEST_TARGET_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_SOURCE_DIR})
 
 add_test(NAME ${TEST_TARGET_NAME}
          COMMAND ${TEST_TARGET_NAME} -r junit) 
 ENDIF(BUILD_TESTS)
 
-if (CMAKE_BINARY_DIR)
-    target_compile_definitions(${TEST_TARGET_NAME} PRIVATE PATH_TO_BINARY="${CMAKE_BINARY_DIR}")
-endif()
+
 
 ####### include what you use
 #find_program(iwyu_path NAMES include-what-you-use iwyu)
