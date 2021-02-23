@@ -1,0 +1,11 @@
+[requires]
+boost/1.75.0
+magic_enum/0.6.6
+soci/4.0.1
+sqlite3/3.34.1
+catch2/2.13.1
+[generators]
+cmake
+[options]
+soci:with_sqlite3=True
+soci:with_boost=True
