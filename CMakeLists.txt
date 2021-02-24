@@ -70,15 +70,14 @@ add_subdirectory(convenienceFunctionForSoci)
 ####### create executable
 OPTION(BUILD_TESTS "enable tests" ON)
 IF(BUILD_TESTS)
-  if (CMAKE_BINARY_DIR)
-    target_compile_definitions(${TEST_TARGET_NAME} PRIVATE PATH_TO_BINARY="${CMAKE_BINARY_DIR}")
-  endif()
+
   enable_testing()
   set(TEST_TARGET_NAME ${TARGET_NAME}_test)
   set(TEST_SOURCES_${TARGET_NAME})
   set(TEST_HEADER_${TARGET_NAME})
   add_subdirectory(test) 
   add_executable(${TEST_TARGET_NAME}
+
     ${HEADER_${TARGET_NAME}}
     ${SOURCES_${TARGET_NAME}}
     ${TEST_HEADER_${TARGET_NAME}}
@@ -92,10 +91,13 @@ IF(BUILD_TESTS)
     CONAN_PKG::soci
     CONAN_PKG::magic_enum
   )
-target_include_directories(${TEST_TARGET_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_SOURCE_DIR})
+  if (CMAKE_BINARY_DIR)
+    target_compile_definitions(${TEST_TARGET_NAME} PRIVATE PATH_TO_BINARY="${CMAKE_BINARY_DIR}")
+  endif()
+  target_include_directories(${TEST_TARGET_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_SOURCE_DIR})
 
-add_test(NAME ${TEST_TARGET_NAME}
-         COMMAND ${TEST_TARGET_NAME} -r junit) 
+  add_test(NAME ${TEST_TARGET_NAME}
+          COMMAND ${TEST_TARGET_NAME} -r junit) 
 ENDIF(BUILD_TESTS)
 
 
