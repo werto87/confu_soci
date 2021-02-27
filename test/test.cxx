@@ -66,8 +66,12 @@ BOOST_FUSION_DEFINE_STRUCT ((test), Player, (std::string, playerId) (Direction, 
 
 BOOST_FUSION_DEFINE_STRUCT ((test), EasyClass, (std::string, playerId) (double, points))
 
+BOOST_FUSION_DEFINE_STRUCT ((test), TableWithForignKeyToEasyClass, (std::string, id) (double, easyClassId))
+
 BOOST_FUSION_DEFINE_STRUCT ((), MyClass, (int, someInt))
 BOOST_FUSION_DEFINE_STRUCT ((test), NestedClass, (int, id) (MyClass, myClass) (MyClass, yourClass))
+BOOST_FUSION_DEFINE_STRUCT ((), Board, (std::string, id) (std::string, gameId))
+BOOST_FUSION_DEFINE_STRUCT ((), Game, (std::string, id))
 
 // find out how we can use value and not only int as nested class=?
 namespace soci
@@ -155,6 +159,22 @@ SCENARIO ("create a table with createTableForStruct", "[createTableForStruct]")
       }
     }
   }
+  GIVEN ("a connection to a database where the table does not exist")
+  {
+    resetTestDatabase ();
+    soci::session sql (soci::sqlite3, pathToTestDatabase);
+    WHEN ("the table is created with foreign keys")
+    {
+      //
+      createTableForStruct<EasyClass> (sql);
+      createTableForStruct<TableWithForignKeyToEasyClass> (sql, { { "easyClassId", "EasyClass", "id" } });
+      THEN ("the tables do exist")
+      {
+        REQUIRE (doesTableExist<TableWithForignKeyToEasyClass> (sql));
+        REQUIRE (doesTableExist<EasyClass> (sql));
+      }
+    }
+  }
 }
 
 SCENARIO ("insert struct in database with insertStruct", "[insertStruct]")
@@ -191,6 +211,66 @@ SCENARIO ("insert struct in database with insertStruct", "[insertStruct]")
         {
           THEN ("throws exception") { REQUIRE (soci::soci_error::error_category::unknown == e.get_error_category ()); }
         }
+    }
+  }
+  GIVEN ("a connection to a database where the tables exists whit foreign key constraints")
+  {
+    resetTestDatabase ();
+    soci::session sql (soci::sqlite3, pathToTestDatabase);
+    confu_soci::createTableForStruct<Board> (sql, { { "gameId", "Game", "id" } });
+    confu_soci::createTableForStruct<Game> (sql);
+    REQUIRE (doesTableExist<Board> (sql));
+    REQUIRE (doesTableExist<Game> (sql));
+    WHEN ("record gets inserted in table with foreign key constraints enabled")
+    {
+      insertStruct (sql, Game{ "game1" }, true);
+      insertStruct (sql, Board{ "board1", "game1" }, true);
+      THEN ("record is in table") { REQUIRE (findStruct<Board> (sql, "gameId", "game1").has_value ()); }
+    }
+  }
+  GIVEN ("a connection to a database where the tables exists")
+  {
+    resetTestDatabase ();
+    soci::session sql (soci::sqlite3, pathToTestDatabase);
+    confu_soci::createTableForStruct<Board> (sql, { { "gameId", "Game", "id" } });
+    confu_soci::createTableForStruct<Game> (sql);
+    REQUIRE (doesTableExist<Board> (sql));
+    REQUIRE (doesTableExist<Game> (sql));
+    WHEN ("record gets inserted in table with foreign key constraints enabled and violeted foreign key constraints")
+    {
+      insertStruct (sql, Game{ "game1" }, true);
+      try
+        {
+          insertStruct (sql, Board{ "board1", "value not in database which violets foreign key constraints" }, true);
+          FAIL ("should throw exception but did not throw exception");
+        }
+      catch (soci::soci_error const &e)
+        {
+          THEN ("throws exception") { REQUIRE (soci::soci_error::error_category::unknown == e.get_error_category ()); }
+        }
+    }
+  }
+  GIVEN ("a connection to a database where the tables exists and foreign key constraints are enabled")
+  {
+    resetTestDatabase ();
+    soci::session sql (soci::sqlite3, pathToTestDatabase);
+    confu_soci::createTableForStruct<Board> (sql, { { "gameId", "Game", "id" } });
+    confu_soci::createTableForStruct<Game> (sql);
+    REQUIRE (doesTableExist<Board> (sql));
+    REQUIRE (doesTableExist<Game> (sql));
+    sql << "PRAGMA foreign_keys = ON;";
+    auto foreignKeysEnabled = 0;
+    sql << "PRAGMA foreign_keys;", soci::into (foreignKeysEnabled);
+    REQUIRE (foreignKeysEnabled != 0);
+    WHEN ("record gets inserted in table with foreign key constraints enabled")
+    {
+      insertStruct (sql, Game{ "game1" }, true);
+      insertStruct (sql, Board{ "board1", "game1" }, true);
+      THEN ("foreign keys enabled are still true")
+      {
+        sql << "PRAGMA foreign_keys;", soci::into (foreignKeysEnabled);
+        REQUIRE (foreignKeysEnabled != 0);
+      }
     }
   }
 }

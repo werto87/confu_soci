@@ -111,8 +111,9 @@ structAsString (T const &structToPrint)
 
 template <typename T>
 void
-insertStruct (soci::session &sql, T const &structToInsert)
+insertStruct (soci::session &sql, T const &structToInsert, bool foreignKeyConstraints = false)
 {
+
   auto result = std::vector<std::string>{};
   auto typeWithNamespace = boost::typeindex::type_id<T> ().pretty_name ();
   boost::algorithm::split (result, typeWithNamespace, boost::is_any_of ("::"));
@@ -136,19 +137,29 @@ insertStruct (soci::session &sql, T const &structToInsert)
       }
   });
   ss << ')';
+  auto foreignKeysEnabled = 0;
+  sql << "PRAGMA foreign_keys;", soci::into (foreignKeysEnabled);
   try
     {
+      if (foreignKeyConstraints && foreignKeysEnabled == 0)
+        {
+          sql << "PRAGMA foreign_keys = ON;";
+        }
       sql << ss.str (), soci::use (structToInsert);
     }
   catch (std::exception const &e)
     {
       throw;
     }
+  if (foreignKeyConstraints && foreignKeysEnabled == 0)
+    {
+      sql << "PRAGMA foreign_keys = OFF;";
+    }
 }
 
 template <typename T>
 void
-updateStruct (soci::session &sql, T const &structToUpdate)
+updateStruct (soci::session &sql, T const &structToUpdate, bool foreignKeyConstraints = false)
 {
   auto result = std::vector<std::string>{};
   auto typeWithNamespace = boost::typeindex::type_id<T> ().pretty_name ();
@@ -180,13 +191,21 @@ updateStruct (soci::session &sql, T const &structToUpdate)
     }
   // sql << ss.str (), soci::use (structToUpdate);
   soci::statement st = (sql.prepare << ss.str (), soci::use (structToUpdate));
+  if (foreignKeyConstraints)
+    {
+      sql << "PRAGMA foreign_keys = ON;";
+    }
   st.execute (true);
+  if (foreignKeyConstraints)
+    {
+      sql << "PRAGMA foreign_keys = OFF;";
+    }
   if (st.get_affected_rows () == 0) throw soci::soci_error{ "could not find struct to update\n" + structAsString (structToUpdate) };
 }
 
 template <typename T>
 void
-upsertStruct (soci::session &sql, T const &structToInsert)
+upsertStruct (soci::session &sql, T const &structToInsert, bool foreignKeyConstraints = false)
 {
   try
     {
@@ -252,6 +271,18 @@ createTableForStruct (soci::session &sql, std::vector<std::tuple<std::string, st
   ddl.primary_key (tableName + "_" + primaryKey, primaryKey);
   for (auto const &[column, foreignTabel, foreignColumn] : foreignKeys)
     {
+      if (column.empty ())
+        {
+          throw soci::soci_error{ "can not create " + tableName + " because the forign key option column is empty. CHECK first element in forign key triplet" };
+        }
+      else if (foreignTabel.empty ())
+        {
+          throw soci::soci_error{ "can not create " + tableName + " because the forign key option foreignTabel is empty. CHECK second element in forign key triplet" };
+        }
+      else if (foreignColumn.empty ())
+        {
+          throw soci::soci_error{ "can not create " + tableName + " because the forign key option foreignColumn is empty. CHECK third element in forign key triplet" };
+        }
       ddl.foreign_key (tableName + "_" + column, column, foreignTabel, foreignColumn);
     }
 }
