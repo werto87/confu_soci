@@ -1,7 +1,10 @@
 set(HEADER_${TARGET_NAME} ${HEADER_${TARGET_NAME}}
-${CMAKE_CURRENT_SOURCE_DIR}/convenienceFunctionForSoci.hxx PARENT_SCOPE
+${CMAKE_CURRENT_SOURCE_DIR}/convenienceFunctionForSoci.hxx
+${CMAKE_CURRENT_SOURCE_DIR}/Concept.hxx
+PARENT_SCOPE
 )
 
 set(SOURCES_${TARGET_NAME} ${SOURCES_${TARGET_NAME}}
-${CMAKE_CURRENT_SOURCE_DIR}/convenienceFunctionForSoci.cxx PARENT_SCOPE
+${CMAKE_CURRENT_SOURCE_DIR}/convenienceFunctionForSoci.cxx 
+PARENT_SCOPE
 )

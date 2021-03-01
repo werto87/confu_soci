@@ -1,6 +1,7 @@
 #ifndef B7C2FAB9_F015_4288_92A6_13D53DA86731
 #define B7C2FAB9_F015_4288_92A6_13D53DA86731
 
+#include "convenienceFunctionForSoci/Concept.hxx"
 #include "soci/soci.h"
 #include "soci/sqlite3/soci-sqlite3.h"
 #include <boost/algorithm/algorithm.hpp>
@@ -86,7 +87,7 @@ template <typename T> concept printable = requires (T t)
   ->std::same_as<std::ostream &>;
 };
 
-template <typename T>
+template <FusionSequence T>
 std::string
 structAsString (T const &structToPrint)
 {
@@ -109,7 +110,7 @@ structAsString (T const &structToPrint)
   return _structAsString.str ();
 }
 
-template <typename T>
+template <FusionSequence T>
 void
 insertStruct (soci::session &sql, T const &structToInsert, bool foreignKeyConstraints = false)
 {
@@ -157,7 +158,7 @@ insertStruct (soci::session &sql, T const &structToInsert, bool foreignKeyConstr
     }
 }
 
-template <typename T>
+template <FusionSequence T>
 void
 updateStruct (soci::session &sql, T const &structToUpdate, bool foreignKeyConstraints = false)
 {
@@ -245,7 +246,7 @@ doesTableExist (soci::session &sql)
   return doesTableExist (sql, typeNameWithOutNamespace (T{}));
 }
 
-template <typename T>
+template <FusionSequence T>
 void
 createTableForStruct (soci::session &sql, std::vector<std::tuple<std::string, std::string, std::string> > const &foreignKeys = {})
 {
@@ -295,7 +296,7 @@ dropTableForStruct (soci::session &sql)
   sql << "DROP TABLE " + typeNameWithOutNamespace (T{});
 }
 
-template <typename fusionSequenceWithTypes>
+template <FusionSequence fusionSequenceWithTypes>
 void
 createTables (soci::session &sql)
 {
@@ -305,7 +306,7 @@ createTables (soci::session &sql)
   });
 }
 
-template <typename fusionSequenceWithTypes>
+template <FusionSequence fusionSequenceWithTypes>
 std::vector<std::string>
 dropTables (soci::session &sql)
 {
