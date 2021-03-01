@@ -18,7 +18,7 @@
 #include <boost/serialization/optional.hpp>
 #include <boost/type_index.hpp>
 #include <catch2/catch.hpp>
-#include <convenienceFunctionForSoci/convenienceFunctionForSoci.hxx>
+#include <confu_soci/convenienceFunctionForSoci.hxx>
 #include <cstdint>
 #include <exception>
 #include <magic_enum.hpp>

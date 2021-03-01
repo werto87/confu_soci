@@ -1,7 +1,7 @@
 #ifndef B7C2FAB9_F015_4288_92A6_13D53DA86731
 #define B7C2FAB9_F015_4288_92A6_13D53DA86731
 
-#include "convenienceFunctionForSoci/Concept.hxx"
+#include "confu_soci/concept.hxx"
 #include "soci/soci.h"
 #include "soci/sqlite3/soci-sqlite3.h"
 #include <boost/algorithm/algorithm.hpp>

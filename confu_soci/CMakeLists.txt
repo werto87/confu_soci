@@ -1,6 +1,6 @@
 set(HEADER_${TARGET_NAME} ${HEADER_${TARGET_NAME}}
 ${CMAKE_CURRENT_SOURCE_DIR}/convenienceFunctionForSoci.hxx
-${CMAKE_CURRENT_SOURCE_DIR}/Concept.hxx
+${CMAKE_CURRENT_SOURCE_DIR}/concept.hxx
 PARENT_SCOPE
 )
 

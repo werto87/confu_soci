@@ -65,7 +65,7 @@ add_library(${TARGET_NAME})
 set_target_properties(${TARGET_NAME} PROPERTIES LINKER_LANGUAGE CXX)
 
 ######## add sub dir
-add_subdirectory(convenienceFunctionForSoci) 
+add_subdirectory(confu_soci) 
 
 ####### create executable
 OPTION(BUILD_TESTS "enable tests" ON)
