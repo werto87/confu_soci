@@ -1,6 +1,5 @@
 #ifndef B7C2FAB9_F015_4288_92A6_13D53DA86731
 #define B7C2FAB9_F015_4288_92A6_13D53DA86731
-
 #include "confu_soci/concept.hxx"
 #include "soci/soci.h"
 #include "soci/sqlite3/soci-sqlite3.h"
@@ -18,12 +17,18 @@
 #include <boost/fusion/include/define_struct.hpp>
 #include <boost/fusion/sequence/intrinsic/at.hpp>
 #include <boost/fusion/sequence/intrinsic_fwd.hpp>
+#include <boost/lexical_cast.hpp>
 #include <boost/mpl/for_each.hpp>
+#include <boost/mpl/if.hpp>
 #include <boost/mpl/range_c.hpp>
 #include <boost/optional.hpp>
+#include <boost/optional/optional.hpp>
 #include <boost/optional/optional_io.hpp>
 #include <boost/type_index.hpp>
 #include <boost/type_traits/remove_reference.hpp>
+#include <boost/uuid/uuid.hpp>
+#include <boost/uuid/uuid_generators.hpp>
+#include <boost/uuid/uuid_io.hpp>
 #include <exception>
 #include <iostream>
 #include <istream>
@@ -110,17 +115,14 @@ structAsString (T const &structToPrint)
   return _structAsString.str ();
 }
 
+// optional uuid generation is not thread save.
+// using insertStruct with empty optional<string> from multiple threads needs synchronization
 template <FusionSequence T>
-void
-insertStruct (soci::session &sql, T const &structToInsert, bool foreignKeyConstraints = false)
+auto
+insertStruct (soci::session &sql, T const &structToInsert, bool foreignKeyConstraints = false, bool shouldGenerateId = false)
 {
-
-  auto result = std::vector<std::string>{};
-  auto typeWithNamespace = boost::typeindex::type_id<T> ().pretty_name ();
-  boost::algorithm::split (result, typeWithNamespace, boost::is_any_of ("::"));
-  auto type = result.back ();
   auto ss = std::stringstream{};
-  ss << "INSERT INTO " << type << '(';
+  ss << "INSERT INTO " << typeNameWithOutNamespace (structToInsert) << '(';
   boost::fusion::for_each (boost::mpl::range_c<int, 0, boost::fusion::result_of::size<T>::value> (), [&] (auto index) {
     ss << boost::fusion::extension::struct_member_name<T, index>::call ();
     if (index < boost::fusion::size (structToInsert) - 1)
@@ -129,9 +131,48 @@ insertStruct (soci::session &sql, T const &structToInsert, bool foreignKeyConstr
       }
   });
   ss << ") VALUES(";
+  auto id = std::remove_reference_t<decltype (boost::fusion::at_c<0> (structToInsert))>{};
   boost::fusion::for_each (boost::mpl::range_c<int, 0, boost::fusion::result_of::size<T>::value> (), [&] (auto index) {
-    ss << ':';
-    ss << boost::fusion::extension::struct_member_name<T, index>::call ();
+    if (index == 0)
+      {
+        if constexpr (std::is_integral_v<std::remove_reference_t<decltype (boost::fusion::at_c<0> (structToInsert))> >)
+          {
+            if (shouldGenerateId)
+              {
+                auto newId = 0ll;
+                if (sql.get_last_insert_id (typeNameWithOutNamespace (structToInsert), newId))
+                  {
+                    id = newId;
+                    ss << id;
+                  }
+              }
+            else
+              {
+                ss << boost::fusion::at_c<index> (structToInsert);
+              }
+          }
+        else
+          {
+            if (shouldGenerateId)
+              {
+                static boost::uuids::random_generator generator;
+                id = boost::lexical_cast<std::string> (generator ());
+                ss << "'" << id << "'";
+              }
+            else
+              {
+                ss << "'" << boost::fusion::at_c<index> (structToInsert) << "'";
+              }
+          }
+      }
+    else if constexpr (std::is_integral_v<std::remove_reference_t<decltype (boost::fusion::at_c<0> (structToInsert))> >)
+      {
+        ss << boost::fusion::at_c<index> (structToInsert);
+      }
+    else
+      {
+        ss << "'" << boost::fusion::at_c<index> (structToInsert) << "'";
+      }
     if (index < boost::fusion::size (structToInsert) - 1)
       {
         ss << ',';
@@ -146,15 +187,28 @@ insertStruct (soci::session &sql, T const &structToInsert, bool foreignKeyConstr
         {
           sql << "PRAGMA foreign_keys = ON;";
         }
-      sql << ss.str (), soci::use (structToInsert);
+
+      sql << ss.str ();
+      if (foreignKeyConstraints && foreignKeysEnabled == 0)
+        {
+          sql << "PRAGMA foreign_keys = OFF;";
+        }
     }
   catch (std::exception const &e)
     {
+      if (foreignKeyConstraints && foreignKeysEnabled == 0)
+        {
+          sql << "PRAGMA foreign_keys = OFF;";
+        }
       throw;
     }
-  if (foreignKeyConstraints && foreignKeysEnabled == 0)
+  if constexpr (std::is_integral_v<std::remove_reference_t<decltype (boost::fusion::at_c<0> (structToInsert))> >)
     {
-      sql << "PRAGMA foreign_keys = OFF;";
+      return id;
+    }
+  else
+    {
+      return id;
     }
 }
 
@@ -162,12 +216,8 @@ template <FusionSequence T>
 void
 updateStruct (soci::session &sql, T const &structToUpdate, bool foreignKeyConstraints = false)
 {
-  auto result = std::vector<std::string>{};
-  auto typeWithNamespace = boost::typeindex::type_id<T> ().pretty_name ();
-  boost::algorithm::split (result, typeWithNamespace, boost::is_any_of ("::"));
-  auto type = result.back ();
   auto ss = std::stringstream{};
-  ss << "UPDATE " << type << " SET ";
+  ss << "UPDATE " << typeNameWithOutNamespace (structToUpdate) << " SET ";
   boost::fusion::for_each (boost::mpl::range_c<int, 0, boost::fusion::result_of::size<T>::value> (), [&] (auto index) {
     ss << boost::fusion::extension::struct_member_name<T, index>::call ();
     ss << "=:";

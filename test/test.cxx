@@ -73,7 +73,6 @@ BOOST_FUSION_DEFINE_STRUCT ((test), NestedClass, (int, id) (MyClass, myClass) (M
 BOOST_FUSION_DEFINE_STRUCT ((), Board, (std::string, id) (std::string, gameId))
 BOOST_FUSION_DEFINE_STRUCT ((), Game, (std::string, id))
 
-// find out how we can use value and not only int as nested class=?
 namespace soci
 {
 template <> struct type_conversion<MyClass>
@@ -272,6 +271,32 @@ SCENARIO ("insert struct in database with insertStruct", "[insertStruct]")
         sql << "PRAGMA foreign_keys;", soci::into (foreignKeysEnabled);
         REQUIRE (foreignKeysEnabled != 0);
       }
+    }
+  }
+  GIVEN ("a connection to a database where the table does exists")
+  {
+    resetTestDatabase ();
+    soci::session sql (soci::sqlite3, pathToTestDatabase);
+    confu_soci::createTableForStruct<Game> (sql);
+    REQUIRE (doesTableExist<Game> (sql));
+    WHEN ("record gets inserted with id and id generated is set to true")
+    {
+      auto id = "game1";
+      auto generatedId = insertStruct (sql, Game{ id }, true, true);
+      THEN ("generated id is diferent from id in struct") { REQUIRE (id != generatedId); }
+    }
+  }
+  GIVEN ("a connection to a database where the table does exists")
+  {
+    resetTestDatabase ();
+    soci::session sql (soci::sqlite3, pathToTestDatabase);
+    confu_soci::createTableForStruct<MyClass> (sql);
+    REQUIRE (doesTableExist<MyClass> (sql));
+    WHEN ("record gets inserted with id and id generated is set to true")
+    {
+      auto id = -1;
+      auto generatedId = insertStruct (sql, MyClass{ id }, true, true);
+      THEN ("generated id is diferent from id in struct") { REQUIRE (generatedId == 1); }
     }
   }
 }
