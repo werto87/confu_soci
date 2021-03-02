@@ -327,17 +327,18 @@ SCENARIO ("update struct in database with updateStruct", "[updateStruct]")
     resetTestDatabase ();
     soci::session sql (soci::sqlite3, pathToTestDatabase);
     createTableForStruct<EasyClass> (sql);
-    insertStruct (sql, EasyClass{ "222", 42 });
+    auto id = "222";
+    insertStruct (sql, EasyClass{ id, 42 });
     auto oldValue = findStruct<EasyClass> (sql, "playerId", "222")->points;
     REQUIRE (doesTableExist<EasyClass> (sql));
     WHEN ("update record")
     {
       double newValue = 1337;
-      REQUIRE_NOTHROW (updateStruct (sql, EasyClass{ "222", newValue }));
+      REQUIRE (updateStruct (sql, EasyClass{ id, newValue }) == id);
       THEN ("the record gets updated in the table")
       {
         REQUIRE (oldValue != newValue);
-        REQUIRE (findStruct<EasyClass> (sql, "playerId", "222")->points == newValue);
+        REQUIRE (findStruct<EasyClass> (sql, "playerId", id)->points == newValue);
       }
     }
   }
@@ -373,7 +374,8 @@ SCENARIO ("upsert struct in database with upsertStruct", "[upsertStruct]")
     REQUIRE (not findStruct<EasyClass> (sql, "playerId", "222").has_value ());
     WHEN ("upsert is called")
     {
-      REQUIRE_NOTHROW (upsertStruct (sql, EasyClass{ "222", 42 }));
+      auto easyClassId = upsertStruct (sql, EasyClass{ "222", 42 });
+      REQUIRE (easyClassId == "222");
       THEN ("the record gets inserted in the table") { REQUIRE (findStruct<EasyClass> (sql, "playerId", "222").has_value ()); }
     }
   }

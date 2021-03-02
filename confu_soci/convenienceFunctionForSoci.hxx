@@ -249,7 +249,7 @@ insertStruct (soci::session &sql, T const &structToInsert, bool foreignKeyConstr
 }
 
 template <FusionSequence T>
-void
+auto
 updateStruct (soci::session &sql, T const &structToUpdate, bool foreignKeyConstraints = false)
 {
   auto ss = std::stringstream{};
@@ -288,10 +288,11 @@ updateStruct (soci::session &sql, T const &structToUpdate, bool foreignKeyConstr
       sql << "PRAGMA foreign_keys = OFF;";
     }
   if (st.get_affected_rows () == 0) throw soci::soci_error{ "could not find struct to update\n" + structAsString (structToUpdate) };
+  return boost::fusion::at_c<0> (structToUpdate);
 }
 
 template <typename T>
-void
+auto
 upsertStruct (soci::session &sql, T const &structToInsert, bool foreignKeyConstraints = false)
 {
   try
@@ -302,6 +303,7 @@ upsertStruct (soci::session &sql, T const &structToInsert, bool foreignKeyConstr
     {
       updateStruct (sql, structToInsert);
     }
+  return boost::fusion::at_c<0> (structToInsert);
 }
 
 template <typename T>
