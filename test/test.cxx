@@ -62,6 +62,8 @@ struct BoardElement
 }
 BOOST_FUSION_ADAPT_STRUCT (test::BoardElement, (unsigned long, id) (boost::optional<std::string>, playerId) (BoardElementType, boardElementType) (float, movementCostToMoveThroughVerticalOrHorizontal))
 
+BOOST_FUSION_DEFINE_STRUCT ((test), IdAnDOptinal, (unsigned long, id) (boost::optional<std::string>, optionalText))
+
 BOOST_FUSION_DEFINE_STRUCT ((test), Player, (std::string, playerId) (Direction, viewDirection) (Direction, moveDirection) (double, viewFieldsize))
 
 BOOST_FUSION_DEFINE_STRUCT ((test), EasyClass, (std::string, playerId) (double, points))
@@ -297,6 +299,23 @@ SCENARIO ("insert struct in database with insertStruct", "[insertStruct]")
       auto id = -1;
       auto generatedId = insertStruct (sql, MyClass{ id }, true, true);
       THEN ("generated id is diferent from id in struct") { REQUIRE (generatedId == 1); }
+    }
+  }
+  GIVEN ("a connection to a database where the table does exists")
+  {
+    resetTestDatabase ();
+    soci::session sql (soci::sqlite3, pathToTestDatabase);
+    confu_soci::createTableForStruct<IdAnDOptinal> (sql);
+    REQUIRE (doesTableExist<IdAnDOptinal> (sql));
+    WHEN ("record has a member with optional value")
+    {
+      insertStruct (sql, IdAnDOptinal{}, true, true);
+      THEN ("generated id is diferent from id in struct")
+      {
+        auto idAnDOptinal = findStruct<IdAnDOptinal> (sql, "id", 1);
+        REQUIRE (idAnDOptinal.has_value ());
+        REQUIRE_FALSE (idAnDOptinal->optionalText.has_value ());
+      }
     }
   }
 }
@@ -555,11 +574,6 @@ SCENARIO ("drop tables for mpl list in database with dropTables", "[dropTables]"
     {
       auto notDropedTables = dropTables<tables> (sql);
       THEN ("did not drop table EasyClass because it did not exist") { REQUIRE (notDropedTables.size () == 1); }
-      // AND_THEN ("no tables exist beacause one got droped and one did not exist at all")
-      // {
-      //   REQUIRE (not doesTableExist<EasyClass> (sql));
-      //   REQUIRE (not doesTableExist<Player> (sql));
-      // }
     }
   }
 }

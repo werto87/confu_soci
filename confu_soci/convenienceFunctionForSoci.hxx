@@ -157,7 +157,7 @@ insertStruct (soci::session &sql, T const &structToInsert, bool foreignKeyConstr
               }
             else
               {
-                id = boost::fusion::at_c<index> (structToInsert);
+                id = boost::fusion::at_c<0> (structToInsert);
                 ss << id;
               }
           }
@@ -175,14 +175,40 @@ insertStruct (soci::session &sql, T const &structToInsert, bool foreignKeyConstr
             ss << "'" << id << "'";
           }
       }
-    else if constexpr (std::is_integral_v<std::remove_reference_t<decltype (boost::fusion::at_c<0> (structToInsert))> >)
-      {
-        ss << boost::fusion::at_c<index> (structToInsert);
-      }
     else
       {
-        ss << "'" << boost::fusion::at_c<index> (structToInsert) << "'";
+        if constexpr (IsOptional<std::remove_reference_t<decltype (boost::fusion::at_c<index> (structToInsert))> >)
+          {
+            if (boost::fusion::at_c<index> (structToInsert).has_value ())
+              {
+                if constexpr (std::is_integral_v<std::remove_reference_t<decltype (boost::fusion::at_c<index> (structToInsert).value ())> >)
+                  {
+                    ss << boost::fusion::at_c<index> (structToInsert).value ();
+                  }
+                else
+                  {
+                    ss << "'" << boost::fusion::at_c<index> (structToInsert).value () << "'";
+                  }
+              }
+            else
+              {
+                // ss << boost::fusion::at_c<index> (structToInsert);
+                ss << "null";
+              }
+          }
+        else
+          {
+            if constexpr (std::is_integral_v<std::remove_reference_t<decltype (boost::fusion::at_c<0> (structToInsert))> >)
+              {
+                ss << boost::fusion::at_c<index> (structToInsert);
+              }
+            else
+              {
+                ss << "'" << boost::fusion::at_c<index> (structToInsert) << "'";
+              }
+          }
       }
+
     if (index < boost::fusion::size (structToInsert) - 1)
       {
         ss << ',';
@@ -384,6 +410,5 @@ dropTables (soci::session &sql)
   });
   return result;
 }
-
 }
 #endif /* B7C2FAB9_F015_4288_92A6_13D53DA86731 */
