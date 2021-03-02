@@ -115,7 +115,13 @@ structAsString (T const &structToPrint)
   return _structAsString.str ();
 }
 
-// not thread save when called with shouldGenerated=true
+// about the shouldGenerateId option
+// id is string:
+// generates a uuid using boost uuid
+// id is integral
+// uses highest id +1
+// !!! shouldGenerateId is not thread save !!!
+//
 template <FusionSequence T>
 auto
 insertStruct (soci::session &sql, T const &structToInsert, bool foreignKeyConstraints = false, bool shouldGenerateId = false)
