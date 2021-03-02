@@ -115,8 +115,7 @@ structAsString (T const &structToPrint)
   return _structAsString.str ();
 }
 
-// optional uuid generation is not thread save.
-// using insertStruct with empty optional<string> from multiple threads needs synchronization
+// not thread save when called with shouldGenerated=true
 template <FusionSequence T>
 auto
 insertStruct (soci::session &sql, T const &structToInsert, bool foreignKeyConstraints = false, bool shouldGenerateId = false)
@@ -142,13 +141,18 @@ insertStruct (soci::session &sql, T const &structToInsert, bool foreignKeyConstr
                 auto newId = 0ll;
                 if (sql.get_last_insert_id (typeNameWithOutNamespace (structToInsert), newId))
                   {
-                    id = newId;
+                    id = newId + 1;
                     ss << id;
+                  }
+                else
+                  {
+                    throw soci::soci_error{ "get_last_insert_id exception" };
                   }
               }
             else
               {
-                ss << boost::fusion::at_c<index> (structToInsert);
+                id = boost::fusion::at_c<index> (structToInsert);
+                ss << id;
               }
           }
         else
@@ -157,12 +161,12 @@ insertStruct (soci::session &sql, T const &structToInsert, bool foreignKeyConstr
               {
                 static boost::uuids::random_generator generator;
                 id = boost::lexical_cast<std::string> (generator ());
-                ss << "'" << id << "'";
               }
             else
               {
-                ss << "'" << boost::fusion::at_c<index> (structToInsert) << "'";
+                id = boost::fusion::at_c<index> (structToInsert);
               }
+            ss << "'" << id << "'";
           }
       }
     else if constexpr (std::is_integral_v<std::remove_reference_t<decltype (boost::fusion::at_c<0> (structToInsert))> >)
