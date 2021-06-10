@@ -14,7 +14,8 @@
 #include <cstddef>
 #include <string>
 
-template <typename T> concept FusionSequence = requires (T a) { boost::fusion::at_c<0> (a); };
-template <typename T> concept IsOptional = requires (T a) { a.has_value (); };
-
+namespace confu_soci{
+  template <typename T> concept FusionSequence = requires (T a) { boost::fusion::at_c<0> (a); };
+  template <typename T> concept IsOptional = requires (T a) { a.has_value (); };
+}
 #endif /* A071053C_A9C4_4BFF_A10C_45887320F653 */
