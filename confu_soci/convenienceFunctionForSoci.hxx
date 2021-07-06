@@ -109,7 +109,8 @@ structAsString (T const &structToPrint)
       }
     else
       {
-        _structAsString << "Member: " << boost::fusion::extension::struct_member_name<T, index>::call () << " Type: " << structAsString (boost::fusion::at_c<index> (structToPrint));
+        // TODO does not work for clang13
+        //  _structAsString << "Member: " << boost::fusion::extension::struct_member_name<T, index>::call () << " Type: " << structAsString (boost::fusion::at_c<index> (structToPrint));
       }
   });
   return _structAsString.str ();
@@ -293,15 +294,15 @@ updateStruct (soci::session &sql, T const &structToUpdate, bool foreignKeyConstr
 
 template <typename T>
 auto
-upsertStruct (soci::session &sql, T const &structToInsert, bool foreignKeyConstraints = false)
+upsertStruct (soci::session &sql, T const &structToInsert, bool foreignKeyConstraints = false, bool shouldGenerateId = false)
 {
   try
     {
-      insertStruct (sql, structToInsert);
+      insertStruct (sql, structToInsert, foreignKeyConstraints, shouldGenerateId);
     }
   catch (std::exception const &)
     {
-      updateStruct (sql, structToInsert);
+      updateStruct (sql, structToInsert, foreignKeyConstraints);
     }
   return boost::fusion::at_c<0> (structToInsert);
 }

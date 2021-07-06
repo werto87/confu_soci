@@ -1,8 +1,8 @@
  #set(CMAKE_CXX_COMPILER "/usr/local/bin/clang++")
  #set(CMAKE_C_COMPILER "/usr/local/bin/clang")
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fcoroutines")
-#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fuse-ld=lld")
+# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ")
+ #set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -v")
 #-fcoroutines-ts -lc++experimental")
 
 #set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -pthread -v")
@@ -32,14 +32,7 @@ set(PROJECT_OPTIONS project_options)
 
 add_library(${PROJECT_OPTIONS} INTERFACE)
 target_compile_features(${PROJECT_OPTIONS} INTERFACE cxx_std_20)
-#target_compile_options(${PROJECT_OPTIONS} INTERFACE -ftime-trace)
-# target_precompile_headers(${PROJECT_OPTIONS} INTERFACE 
-# /home/walde/.conan/data/boost/1.74.0/_/_/package/23a9767f828c6565e4789a33218c8ed06b1803d6/include/boost/algorithm/string.hpp
-# /home/walde/.conan/data/boost/1.74.0/_/_/package/23a9767f828c6565e4789a33218c8ed06b1803d6/include/boost/asio.hpp
-# /home/walde/.conan/data/boost/1.74.0/_/_/package/23a9767f828c6565e4789a33218c8ed06b1803d6/include/boost/beast.hpp
-# /home/walde/.conan/data/boost/1.74.0/_/_/package/23a9767f828c6565e4789a33218c8ed06b1803d6/include/boost/range/adaptor/indexed.hpp
-# /home/walde/.conan/data/boost/1.74.0/_/_/package/23a9767f828c6565e4789a33218c8ed06b1803d6/include/boost/bind.hpp
-# )
+
 
 
 # include(cmake/Sanitizers.cmake)
@@ -68,7 +61,7 @@ set_target_properties(${TARGET_NAME} PROPERTIES LINKER_LANGUAGE CXX)
 add_subdirectory(confu_soci) 
 
 ####### create executable
-OPTION(BUILD_TESTS "enable tests" ON)
+OPTION(BUILD_TESTS "enable tests" OFF)
 IF(BUILD_TESTS)
 
   enable_testing()
@@ -87,9 +80,12 @@ IF(BUILD_TESTS)
     ${PROJECT_OPTIONS}
     CONAN_PKG::catch2
     CONAN_PKG::boost
-    CONAN_PKG::sqlite3
     CONAN_PKG::soci
-    CONAN_PKG::magic_enum
+#todo fix circular link error
+#    /home/walde/.conan/data/soci/4.0.2/_/_/package/7422c077bee1759414c068d4abf84979d833ee12/lib/libsoci_sqlite3.a
+    #/home/walde/.conan/data/soci/4.0.2/_/_/package/d16ea4d31df362ca8118e30fa844fb41cde58549/lib/libsoci_sqlite3.a
+     CONAN_PKG::magic_enum
+     #${CONAN_LIBS}
   )
   if (CMAKE_BINARY_DIR)
     target_compile_definitions(${TEST_TARGET_NAME} PRIVATE PATH_TO_BINARY="${CMAKE_BINARY_DIR}")
@@ -102,10 +98,6 @@ ENDIF(BUILD_TESTS)
 
 
 
-####### include what you use
-#find_program(iwyu_path NAMES include-what-you-use iwyu)
-#set_property(TARGET ${TARGET_SERVER_NAME} PROPERTY CXX_INCLUDE_WHAT_YOU_USE ${iwyu_path})
-# set_property(TARGET ${TARGET_NAME} PROPERTY CXX_INCLUDE_WHAT_YOU_USE ${iwyu_path})
 
 target_sources(${TARGET_NAME} PRIVATE 
 ${SOURCES_${TARGET_NAME}}
@@ -123,11 +115,13 @@ target_include_directories(${TARGET_NAME} PRIVATE
   
 
 target_link_libraries(${TARGET_NAME} PRIVATE ${PROJECT_WARNINGS} ${PROJECT_OPTIONS}
-#CONAN_PKG::imgui-sfml
 CONAN_PKG::boost
-CONAN_PKG::sqlite3
 CONAN_PKG::soci
+
+#/home/walde/.conan/data/soci/4.0.2/_/_/package/7422c077bee1759414c068d4abf84979d833ee12/lib/libsoci_sqlite3.a
+#/home/walde/.conan/data/soci/4.0.2/_/_/package/d16ea4d31df362ca8118e30fa844fb41cde58549/lib/libsoci_sqlite3.a
 CONAN_PKG::magic_enum
+#${CONAN_LIBS}
 )
 
 
