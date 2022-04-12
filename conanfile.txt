@@ -1,9 +1,10 @@
 [requires]
 #boost/1.76.0
 magic_enum/0.7.2
-#soci/4.0.2
+# soci/4.0.3
+boost/1.78.0
 soci/4.0.2@werto87/stable
-catch2/2.13.1
+catch2/2.13.7
 [generators]
 cmake
 [options]

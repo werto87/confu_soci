@@ -92,30 +92,6 @@ template <typename T> concept printable = requires (T t)
   ->std::same_as<std::ostream &>;
 };
 
-template <FusionSequence T>
-std::string
-structAsString (T const &structToPrint)
-{
-  auto _structAsString = std::stringstream{};
-  _structAsString << typeName (structToPrint) << std::endl;
-  boost::fusion::for_each (boost::mpl::range_c<unsigned, 0, boost::fusion::result_of::size<T>::value> (), [&] (auto index) {
-    if constexpr (std::is_enum<typename boost::fusion::result_of::value_at_c<T, index>::type>::value)
-      {
-        _structAsString << "Name: " << boost::fusion::extension::struct_member_name<T, index>::call () << " Value: " << magic_enum::enum_name (boost::fusion::at_c<index> (structToPrint)) << std::endl;
-      }
-    else if constexpr (requires { _structAsString << boost::fusion::at_c<index> (structToPrint); })
-      {
-        _structAsString << "Name: " << boost::fusion::extension::struct_member_name<T, index>::call () << " Value: " << boost::fusion::at_c<index> (structToPrint) << std::endl;
-      }
-    else
-      {
-        // TODO does not work for clang13
-        //  _structAsString << "Member: " << boost::fusion::extension::struct_member_name<T, index>::call () << " Type: " << structAsString (boost::fusion::at_c<index> (structToPrint));
-      }
-  });
-  return _structAsString.str ();
-}
-
 // about the shouldGenerateId option
 // id is string:
 // generates a uuid using boost uuid
@@ -288,7 +264,7 @@ updateStruct (soci::session &sql, T const &structToUpdate, bool foreignKeyConstr
     {
       sql << "PRAGMA foreign_keys = OFF;";
     }
-  if (st.get_affected_rows () == 0) throw soci::soci_error{ "could not find struct to update\n" + structAsString (structToUpdate) };
+  if (st.get_affected_rows () == 0) throw soci::soci_error{ "could not find struct to update\n" + typeName (structToUpdate) };
   return boost::fusion::at_c<0> (structToUpdate);
 }
 

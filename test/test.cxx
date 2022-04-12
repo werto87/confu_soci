@@ -110,10 +110,6 @@ namespace test
 {
 TEST_CASE ("type name with out namespace") { REQUIRE (typeNameWithOutNamespace (Player{}) == "Player"); }
 TEST_CASE ("type name with namespace") { REQUIRE (typeName (Player{}) == "test::Player"); }
-TEST_CASE ("simple struct") { REQUIRE (structAsString (EasyClass{ "123", 42 }) == "test::EasyClass\nName: playerId Value: 123\nName: points Value: 42\n"); }
-
-TEST_CASE ("struct with enum") { REQUIRE (structAsString (Player{}) == "test::Player\nName: playerId Value: \nName: viewDirection Value: UpLeft\nName: moveDirection Value: UpLeft\nName: viewFieldsize Value: 0\n"); }
-TEST_CASE ("struct with nested class") { REQUIRE (structAsString (NestedClass{}) == "test::NestedClass\nName: id Value: 0\nMember: myClass Type: (anonymous namespace)::MyClass\nName: someInt Value: 0\nMember: yourClass Type: (anonymous namespace)::MyClass\nName: someInt Value: 0\n"); }
 
 TEST_CASE ("doesTableExists")
 {

@@ -65,7 +65,7 @@ OPTION(BUILD_TESTS "enable tests" OFF)
 IF(BUILD_TESTS)
 
   enable_testing()
-  set(TEST_TARGET_NAME ${TARGET_NAME}_test)
+  set(TEST_TARGET_NAME _test)
   set(TEST_SOURCES_${TARGET_NAME})
   set(TEST_HEADER_${TARGET_NAME})
   add_subdirectory(test) 
