@@ -175,7 +175,14 @@ insertStruct (soci::session &sql, T const &structToInsert, bool foreignKeyConstr
           }
         else
           {
-            if constexpr (std::is_integral_v<std::remove_reference_t<decltype (boost::fusion::at_c<0> (structToInsert))> >)
+            if constexpr (IsVector<typename std::decay<decltype (boost::fusion::at_c<index> (structToInsert))>::type>)
+              {
+                // TODO should serilize std::vector<uint8_t> to binary data
+                auto const &structToInsert123 = boost::fusion::at_c<index> (structToInsert);
+                std::cout << typeName (boost::fusion::at_c<index> (structToInsert)) << std::endl;
+                // ss << ;
+              }
+            else if constexpr (std::is_integral_v<std::remove_reference_t<decltype (boost::fusion::at_c<0> (structToInsert))> >)
               {
                 ss << boost::fusion::at_c<index> (structToInsert);
               }
@@ -200,7 +207,7 @@ insertStruct (soci::session &sql, T const &structToInsert, bool foreignKeyConstr
         {
           sql << "PRAGMA foreign_keys = ON;";
         }
-
+      std::cout << ss.str () << std::endl;
       sql << ss.str ();
       if (foreignKeyConstraints && foreignKeysEnabled == 0)
         {
@@ -215,14 +222,7 @@ insertStruct (soci::session &sql, T const &structToInsert, bool foreignKeyConstr
         }
       throw;
     }
-  if constexpr (std::is_integral_v<std::remove_reference_t<decltype (boost::fusion::at_c<0> (structToInsert))> >)
-    {
-      return id;
-    }
-  else
-    {
-      return id;
-    }
+  return id;
 }
 
 template <FusionSequence T>

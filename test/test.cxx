@@ -74,6 +74,7 @@ BOOST_FUSION_DEFINE_STRUCT ((), MyClass, (int, someInt))
 BOOST_FUSION_DEFINE_STRUCT ((test), NestedClass, (int, id) (MyClass, myClass) (MyClass, yourClass))
 BOOST_FUSION_DEFINE_STRUCT ((), Board, (std::string, id) (std::string, gameId))
 BOOST_FUSION_DEFINE_STRUCT ((), Game, (std::string, id))
+BOOST_FUSION_DEFINE_STRUCT ((), MyVector, (int, someInt) (std::vector<uint8_t>, someVector))
 
 namespace soci
 {
@@ -313,6 +314,26 @@ SCENARIO ("insert struct in database with insertStruct", "[insertStruct]")
         REQUIRE_FALSE (idAnDOptinal->optionalText.has_value ());
       }
     }
+  }
+
+  GIVEN ("a connection to a database where the table does exists")
+  {
+    // TODO test std::vector<unsigned char>
+    // TODO test std::vector<std::tuple<unsigned char, char>>
+    resetTestDatabase ();
+    soci::session sql (soci::sqlite3, pathToTestDatabase);
+    confu_soci::createTableForStruct<MyVector> (sql);
+    REQUIRE (doesTableExist<MyVector> (sql));
+    // WHEN ("record has a member which is a vector of byte")
+    // {
+    //   insertStruct (sql, MyVector{}, true, true);
+    //   THEN ("generated id is diferent from id in struct")
+    //   {
+    //     auto idAnDOptinal = findStruct<IdAnDOptinal> (sql, "id", 1);
+    //     REQUIRE (idAnDOptinal.has_value ());
+    //     REQUIRE_FALSE (idAnDOptinal->optionalText.has_value ());
+    //   }
+    // }
   }
 }
 
