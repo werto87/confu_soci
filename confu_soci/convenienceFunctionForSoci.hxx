@@ -29,6 +29,7 @@
 #include <boost/uuid/uuid.hpp>
 #include <boost/uuid/uuid_generators.hpp>
 #include <boost/uuid/uuid_io.hpp>
+#include <cstdlib>
 #include <exception>
 #include <iostream>
 #include <istream>
@@ -42,24 +43,41 @@
 #include <string>
 #include <tuple>
 #include <type_traits>
+// #include <soci/in
 namespace soci
 {
-template <typename E> struct type_conversion<E, typename std::enable_if<std::is_enum<E>::value>::type>
-{
-  typedef std::string base_type;
-  static void
-  from_base (std::string const &v, indicator /* ind */, E &p)
-  {
-    p = magic_enum::enum_cast<E> (v).value ();
-  }
+// template <typename E> struct type_conversion<E, typename std::enable_if<std::is_enum<E>::value>::type>
+// {
+//   typedef std::string base_type;
+//   static void
+//   from_base (std::string const &v, indicator /* ind */, E &p)
+//   {
+//     p = magic_enum::enum_cast<E> (v).value ();
+//   }
 
-  static void
-  to_base (const E &p, std::string &v, indicator &ind)
-  {
-    v = std::string{ magic_enum::enum_name<E> (p) };
-    ind = i_ok;
-  }
-};
+//   static void
+//   to_base (const E &p, std::string &v, indicator &ind)
+//   {
+//     v = std::string{ magic_enum::enum_name<E> (p) };
+//     ind = i_ok;
+//   }
+// };
+// template <typename E> struct type_conversion<E, typename std::enable_if<std::is_enum<E>::value>::type>
+// {
+//   typedef std::string base_type;
+//   static void
+//   from_base (std::string const &v, indicator /* ind */, E &p)
+//   {
+//     p = magic_enum::enum_cast<E> (v).value ();
+//   }
+
+//   static void
+//   to_base (const E &p, std::string &v, indicator &ind)
+//   {
+//     v = std::string{ magic_enum::enum_name<E> (p) };
+//     ind = i_ok;
+//   }
+// };
 }
 
 namespace confu_soci
@@ -103,9 +121,12 @@ template <FusionSequence T>
 auto
 insertStruct (soci::session &sql, T const &structToInsert, bool foreignKeyConstraints = false, bool shouldGenerateId = false)
 {
+  soci::statement st (sql);
+  st.alloc ();
   auto ss = std::stringstream{};
   ss << "INSERT INTO " << typeNameWithOutNamespace (structToInsert) << '(';
   boost::fusion::for_each (boost::mpl::range_c<int, 0, boost::fusion::result_of::size<T>::value> (), [&] (auto index) {
+    // TODO this is possible in one for_each it is not needed to iterate 2 times to create the statement string
     ss << boost::fusion::extension::struct_member_name<T, index>::call ();
     if (index < boost::fusion::size (structToInsert) - 1)
       {
@@ -115,6 +136,11 @@ insertStruct (soci::session &sql, T const &structToInsert, bool foreignKeyConstr
   ss << ") VALUES(";
   auto id = std::remove_reference_t<decltype (boost::fusion::at_c<0> (structToInsert))>{};
   boost::fusion::for_each (boost::mpl::range_c<int, 0, boost::fusion::result_of::size<T>::value> (), [&] (auto index) {
+    ss << ':' << boost::fusion::extension::struct_member_name<T, index>::call ();
+    if (index < boost::fusion::size (structToInsert) - 1)
+      {
+        ss << ',';
+      }
     if (index == 0)
       {
         if constexpr (std::is_integral_v<std::remove_reference_t<decltype (boost::fusion::at_c<0> (structToInsert))> >)
@@ -124,8 +150,9 @@ insertStruct (soci::session &sql, T const &structToInsert, bool foreignKeyConstr
                 auto newId = 0ll;
                 if (sql.get_last_insert_id (typeNameWithOutNamespace (structToInsert), newId))
                   {
-                    id = newId + 1;
-                    ss << id;
+                    newId++;
+                    id = newId;
+                    st.exchange (soci::use (id));
                   }
                 else
                   {
@@ -135,7 +162,7 @@ insertStruct (soci::session &sql, T const &structToInsert, bool foreignKeyConstr
             else
               {
                 id = boost::fusion::at_c<0> (structToInsert);
-                ss << id;
+                st.exchange (soci::use (id));
               }
           }
         else
@@ -144,58 +171,37 @@ insertStruct (soci::session &sql, T const &structToInsert, bool foreignKeyConstr
               {
                 static boost::uuids::random_generator generator;
                 id = boost::lexical_cast<std::string> (generator ());
+                st.exchange (soci::use (id));
               }
             else
               {
                 id = boost::fusion::at_c<index> (structToInsert);
+                st.exchange (soci::use (id));
               }
-            ss << "'" << id << "'";
           }
       }
     else
       {
-        if constexpr (IsOptional<std::remove_reference_t<decltype (boost::fusion::at_c<index> (structToInsert))> >)
+        if constexpr (IsVector<typename std::decay<decltype (boost::fusion::at_c<index> (structToInsert))>::type>)
           {
-            if (boost::fusion::at_c<index> (structToInsert).has_value ())
-              {
-                if constexpr (std::is_integral_v<std::remove_reference_t<decltype (boost::fusion::at_c<index> (structToInsert).value ())> >)
-                  {
-                    ss << boost::fusion::at_c<index> (structToInsert).value ();
-                  }
-                else
-                  {
-                    ss << "'" << boost::fusion::at_c<index> (structToInsert).value () << "'";
-                  }
-              }
-            else
-              {
-                // ss << boost::fusion::at_c<index> (structToInsert);
-                ss << "null";
-              }
+            // TODO vector unsigned char support
+            // std::vector<uint8_t> tmp (1000000, 0);
+            // soci::blob b (sql);
+            // b.write (0, reinterpret_cast<char const *> (tmp.data ()), tmp.size ());
+            // soci::statement st (sql);
+            // st.alloc ();
+            // st.exchange (soci::use (0));
+            // st.exchange (soci::use (b));
+            // st.prepare ("insert into MyVectorClass(id,data) values(:val,:val1)");
+            // st.define_and_bind ();
+            // st.execute (true);
+            std::cout << "IMPLEMENT VECTOR UNSIGNED SUPPORT" << std::endl;
+            abort ();
           }
         else
           {
-            if constexpr (IsVector<typename std::decay<decltype (boost::fusion::at_c<index> (structToInsert))>::type>)
-              {
-                // TODO should serilize std::vector<uint8_t> to binary data
-                auto const &structToInsert123 = boost::fusion::at_c<index> (structToInsert);
-                std::cout << typeName (boost::fusion::at_c<index> (structToInsert)) << std::endl;
-                // ss << ;
-              }
-            else if constexpr (std::is_integral_v<std::remove_reference_t<decltype (boost::fusion::at_c<0> (structToInsert))> >)
-              {
-                ss << boost::fusion::at_c<index> (structToInsert);
-              }
-            else
-              {
-                ss << "'" << boost::fusion::at_c<index> (structToInsert) << "'";
-              }
+            st.exchange (soci::use (boost::fusion::at_c<index> (structToInsert)));
           }
-      }
-
-    if (index < boost::fusion::size (structToInsert) - 1)
-      {
-        ss << ',';
       }
   });
   ss << ')';
@@ -207,8 +213,9 @@ insertStruct (soci::session &sql, T const &structToInsert, bool foreignKeyConstr
         {
           sql << "PRAGMA foreign_keys = ON;";
         }
-      std::cout << ss.str () << std::endl;
-      sql << ss.str ();
+      st.prepare (ss.str ());
+      st.define_and_bind ();
+      st.execute (true);
       if (foreignKeyConstraints && foreignKeysEnabled == 0)
         {
           sql << "PRAGMA foreign_keys = OFF;";
