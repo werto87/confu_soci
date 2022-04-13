@@ -62,7 +62,7 @@ struct BoardElement
 }
 BOOST_FUSION_ADAPT_STRUCT (test::BoardElement, (unsigned long, id) (boost::optional<std::string>, playerId) (BoardElementType, boardElementType) (float, movementCostToMoveThroughVerticalOrHorizontal))
 
-BOOST_FUSION_DEFINE_STRUCT ((test), IdAnDOptinal, (unsigned long, id) (boost::optional<std::string>, optionalText))
+BOOST_FUSION_DEFINE_STRUCT ((test), IdAndOptional, (unsigned long, id) (boost::optional<std::string>, optionalText))
 
 BOOST_FUSION_DEFINE_STRUCT ((test), Player, (std::string, playerId) (Direction, viewDirection) (Direction, moveDirection) (double, viewFieldsize))
 
@@ -235,7 +235,7 @@ SCENARIO ("insert struct in database with insertStruct", "[insertStruct]")
     confu_soci::createTableForStruct<Game> (sql);
     REQUIRE (doesTableExist<Board> (sql));
     REQUIRE (doesTableExist<Game> (sql));
-    WHEN ("record gets inserted in table with foreign key constraints enabled and violeted foreign key constraints")
+    WHEN ("record gets inserted in table with foreign key constraints enabled and violated foreign key constraints")
     {
       insertStruct (sql, Game{ "game1" }, true);
       try
@@ -282,7 +282,7 @@ SCENARIO ("insert struct in database with insertStruct", "[insertStruct]")
     {
       auto id = "game1";
       auto generatedId = insertStruct (sql, Game{ id }, true, true);
-      THEN ("generated id is diferent from id in struct") { REQUIRE (id != generatedId); }
+      THEN ("generated id is different from id in struct") { REQUIRE (id != generatedId); }
     }
   }
   GIVEN ("a connection to a database where the table does exists")
@@ -295,23 +295,23 @@ SCENARIO ("insert struct in database with insertStruct", "[insertStruct]")
     {
       auto id = -1;
       auto generatedId = insertStruct (sql, MyClass{ id }, true, true);
-      THEN ("generated id is diferent from id in struct") { REQUIRE (generatedId == 1); }
+      THEN ("generated id is different from id in struct") { REQUIRE (generatedId == 1); }
     }
   }
   GIVEN ("a connection to a database where the table does exists")
   {
     resetTestDatabase ();
     soci::session sql (soci::sqlite3, pathToTestDatabase);
-    confu_soci::createTableForStruct<IdAnDOptinal> (sql);
-    REQUIRE (doesTableExist<IdAnDOptinal> (sql));
+    confu_soci::createTableForStruct<IdAndOptional> (sql);
+    REQUIRE (doesTableExist<IdAndOptional> (sql));
     WHEN ("record has a member with optional value")
     {
-      insertStruct (sql, IdAnDOptinal{}, true, true);
-      THEN ("generated id is diferent from id in struct")
+      insertStruct (sql, IdAndOptional{}, true, true);
+      THEN ("generated id is different from id in struct")
       {
-        auto idAnDOptinal = findStruct<IdAnDOptinal> (sql, "id", 1);
-        REQUIRE (idAnDOptinal.has_value ());
-        REQUIRE_FALSE (idAnDOptinal->optionalText.has_value ());
+        auto idAndOptional = findStruct<IdAndOptional> (sql, "id", 1);
+        REQUIRE (idAndOptional.has_value ());
+        REQUIRE_FALSE (idAndOptional->optionalText.has_value ());
       }
     }
   }
@@ -327,11 +327,11 @@ SCENARIO ("insert struct in database with insertStruct", "[insertStruct]")
     // WHEN ("record has a member which is a vector of byte")
     // {
     //   insertStruct (sql, MyVector{}, true, true);
-    //   THEN ("generated id is diferent from id in struct")
+    //   THEN ("generated id is different from id in struct")
     //   {
-    //     auto idAnDOptinal = findStruct<IdAnDOptinal> (sql, "id", 1);
-    //     REQUIRE (idAnDOptinal.has_value ());
-    //     REQUIRE_FALSE (idAnDOptinal->optionalText.has_value ());
+    //     auto idAndOptional = findStruct<IdAndOptional> (sql, "id", 1);
+    //     REQUIRE (idAndOptional.has_value ());
+    //     REQUIRE_FALSE (idAndOptional->optionalText.has_value ());
     //   }
     // }
   }

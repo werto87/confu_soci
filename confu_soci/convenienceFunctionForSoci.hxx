@@ -342,21 +342,21 @@ createTableForStruct (soci::session &sql, std::vector<std::tuple<std::string, st
   });
   auto primaryKey = boost::fusion::extension::struct_member_name<T, 0>::call ();
   ddl.primary_key (tableName + "_" + primaryKey, primaryKey);
-  for (auto const &[column, foreignTabel, foreignColumn] : foreignKeys)
+  for (auto const &[column, foreignTable, foreignColumn] : foreignKeys)
     {
       if (column.empty ())
         {
           throw soci::soci_error{ "can not create " + tableName + " because the forign key option column is empty. CHECK first element in forign key triplet" };
         }
-      else if (foreignTabel.empty ())
+      else if (foreignTable.empty ())
         {
-          throw soci::soci_error{ "can not create " + tableName + " because the forign key option foreignTabel is empty. CHECK second element in forign key triplet" };
+          throw soci::soci_error{ "can not create " + tableName + " because the forign key option foreignTable is empty. CHECK second element in forign key triplet" };
         }
       else if (foreignColumn.empty ())
         {
           throw soci::soci_error{ "can not create " + tableName + " because the forign key option foreignColumn is empty. CHECK third element in forign key triplet" };
         }
-      ddl.foreign_key (tableName + "_" + column, column, foreignTabel, foreignColumn);
+      ddl.foreign_key (tableName + "_" + column, column, foreignTable, foreignColumn);
     }
 }
 
