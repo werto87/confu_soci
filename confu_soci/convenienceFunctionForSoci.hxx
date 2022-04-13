@@ -236,9 +236,12 @@ template <FusionSequence T>
 auto
 updateStruct (soci::session &sql, T const &structToUpdate, bool foreignKeyConstraints = false)
 {
+  soci::statement st (sql);
+  st.alloc ();
   auto ss = std::stringstream{};
   ss << "UPDATE " << typeNameWithOutNamespace (structToUpdate) << " SET ";
   boost::fusion::for_each (boost::mpl::range_c<int, 0, boost::fusion::result_of::size<T>::value> (), [&] (auto index) {
+    st.exchange (soci::use (boost::fusion::at_c<index> (structToUpdate)));
     ss << boost::fusion::extension::struct_member_name<T, index>::call ();
     ss << "=:";
     ss << boost::fusion::extension::struct_member_name<T, index>::call ();
@@ -249,19 +252,9 @@ updateStruct (soci::session &sql, T const &structToUpdate, bool foreignKeyConstr
   });
   ss << " WHERE ";
   ss << boost::fusion::extension::struct_member_name<T, 0>::call ();
-  ss << '=';
-  if constexpr (std::is_integral_v<std::remove_reference_t<decltype (boost::fusion::at_c<0> (structToUpdate))> >)
-    {
-      ss << boost::fusion::at_c<0> (structToUpdate);
-    }
-  else
-    {
-      ss << "'";
-      ss << boost::fusion::at_c<0> (structToUpdate);
-      ss << "'";
-    }
-  // sql << ss.str (), soci::use (structToUpdate);
-  soci::statement st = (sql.prepare << ss.str (), soci::use (structToUpdate));
+  ss << "=:" << boost::fusion::extension::struct_member_name<T, 0>::call ();
+  st.prepare (ss.str ());
+  st.define_and_bind ();
   if (foreignKeyConstraints)
     {
       sql << "PRAGMA foreign_keys = ON;";
