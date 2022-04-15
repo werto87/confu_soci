@@ -224,7 +224,7 @@ SCENARIO ("insert struct in database with insertStruct", "[insertStruct]")
     {
       insertStruct (sql, Game{ "game1" }, true);
       insertStruct (sql, Board{ "board1", "game1" }, true);
-      THEN ("record is in table") { REQUIRE (findStruct<Board> (sql, "gameId", "game1").has_value ()); }
+      THEN ("record is in table") { REQUIRE (findStruct<Board> (sql, "gameId", std::string{ "game1" }).has_value ()); }
     }
   }
   GIVEN ("a connection to a database where the tables exists")
@@ -355,7 +355,7 @@ SCENARIO ("update struct in database with updateStruct", "[updateStruct]")
       THEN ("the record gets updated in the table")
       {
         REQUIRE (oldValue != newValue);
-        REQUIRE (findStruct<EasyClass> (sql, "playerId", id)->points == newValue);
+        REQUIRE (findStruct<EasyClass> (sql, "playerId", std::string{ id })->points == newValue);
       }
     }
   }
@@ -596,4 +596,5 @@ SCENARIO ("drop tables for mpl list in database with dropTables", "[dropTables]"
     }
   }
 }
+
 }

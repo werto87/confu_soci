@@ -39,6 +39,7 @@
 #include <soci/boost-gregorian-date.h>
 #include <soci/boost-optional.h>
 #include <soci/boost-tuple.h>
+#include <soci/use.h>
 #include <sstream>
 #include <string>
 #include <tuple>
@@ -283,15 +284,31 @@ upsertStruct (soci::session &sql, T const &structToInsert, bool foreignKeyConstr
   return boost::fusion::at_c<0> (structToInsert);
 }
 
-template <typename T>
+template <typename T, typename Y>
 boost::optional<T>
-findStruct (soci::session &sql, std::string const &columnName, auto const &value)
+findStruct (soci::session &sql, std::string const &columnName, Y const &value)
 {
+  soci::statement st (sql);
+  st.alloc ();
   auto tableName = typeNameWithOutNamespace (T{});
   auto ss = std::stringstream{};
-  ss << "SELECT * FROM " << tableName << " WHERE " << columnName << '=' << "'" << value << "'";
+  ss << "SELECT * FROM " << tableName << " WHERE " << columnName << "=:value";
   auto result = T{};
-  sql << ss.str (), soci::into (result);
+  st.exchange (soci::into (result));
+  auto tmp = std::string{};
+  if constexpr (not std::integral<std::decay<Y> > and std::convertible_to<Y, std::string>)
+    {
+      // using tmp string here so tmp will live long enough
+      tmp = value;
+      st.exchange (soci::use (tmp));
+    }
+  else
+    {
+      st.exchange (soci::use (value));
+    }
+  st.prepare (ss.str ());
+  st.define_and_bind ();
+  st.execute (true);
   if (sql.got_data ())
     {
       return result;
