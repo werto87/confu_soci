@@ -146,8 +146,7 @@ insertStruct (soci::session &sql, T const &structToInsert, bool foreignKeyConstr
       {
         ss << ',';
       }
-
-    if (index == 0)
+    if constexpr (index == 0)
       {
         if constexpr (std::is_integral_v<std::remove_reference_t<decltype (boost::fusion::at_c<0> (structToInsert))> >)
           {

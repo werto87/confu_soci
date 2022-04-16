@@ -75,6 +75,7 @@ BOOST_FUSION_DEFINE_STRUCT ((test), NestedClass, (int, id) (MyClass, myClass) (M
 BOOST_FUSION_DEFINE_STRUCT ((), Board, (std::string, id) (std::string, gameId))
 BOOST_FUSION_DEFINE_STRUCT ((), Game, (std::string, id))
 BOOST_FUSION_DEFINE_STRUCT ((), MyVector, (unsigned long, id) (std::vector<uint8_t>, someVector))
+BOOST_FUSION_DEFINE_STRUCT ((), MyVectorStringId, (std::string, id) (std::vector<uint8_t>, someVector))
 
 namespace soci
 {
@@ -315,7 +316,6 @@ SCENARIO ("insert struct in database with insertStruct", "[insertStruct]")
       }
     }
   }
-
   GIVEN ("a connection to a database where the table does exists")
   {
     // TODO test std::vector<unsigned char>
@@ -330,6 +330,26 @@ SCENARIO ("insert struct in database with insertStruct", "[insertStruct]")
       THEN ("generated id is different from id in struct")
       {
         auto myVec = findStruct<MyVector> (sql, "id", 1);
+        REQUIRE (myVec.has_value ());
+        REQUIRE (myVec->someVector.size () == 1000000);
+        REQUIRE (myVec->someVector.at (0) == 129);
+      }
+    }
+  }
+  GIVEN ("a connection to a database where the table does exists")
+  {
+    // TODO test std::vector<unsigned char>
+    // TODO test std::vector<std::tuple<unsigned char, char>>
+    resetTestDatabase ();
+    soci::session sql (soci::sqlite3, pathToTestDatabase);
+    confu_soci::createTableForStruct<MyVectorStringId> (sql);
+    REQUIRE (doesTableExist<MyVectorStringId> (sql));
+    WHEN ("record has a member which is a vector of byte")
+    {
+      insertStruct (sql, MyVectorStringId{ "1", std::vector<uint8_t> (1000000, 129) });
+      THEN ("generated id is different from id in struct")
+      {
+        auto myVec = findStruct<MyVectorStringId> (sql, "id", "1");
         REQUIRE (myVec.has_value ());
         REQUIRE (myVec->someVector.size () == 1000000);
         REQUIRE (myVec->someVector.at (0) == 129);
@@ -597,5 +617,4 @@ SCENARIO ("drop tables for mpl list in database with dropTables", "[dropTables]"
     }
   }
 }
-
 }
