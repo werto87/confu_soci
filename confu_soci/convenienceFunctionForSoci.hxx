@@ -29,6 +29,7 @@
 #include <boost/uuid/uuid.hpp>
 #include <boost/uuid/uuid_generators.hpp>
 #include <boost/uuid/uuid_io.hpp>
+#include <cstdint>
 #include <cstdlib>
 #include <exception>
 #include <iostream>
@@ -42,8 +43,10 @@
 #include <soci/use.h>
 #include <sstream>
 #include <string>
+#include <sys/types.h>
 #include <tuple>
 #include <type_traits>
+#include <utility>
 // #include <soci/in
 namespace soci
 {
@@ -123,6 +126,7 @@ auto
 insertStruct (soci::session &sql, T const &structToInsert, bool foreignKeyConstraints = false, bool shouldGenerateId = false)
 {
   soci::statement st (sql);
+  soci::blob b (sql);
   st.alloc ();
   auto ss = std::stringstream{};
   ss << "INSERT INTO " << typeNameWithOutNamespace (structToInsert) << '(';
@@ -142,6 +146,7 @@ insertStruct (soci::session &sql, T const &structToInsert, bool foreignKeyConstr
       {
         ss << ',';
       }
+
     if (index == 0)
       {
         if constexpr (std::is_integral_v<std::remove_reference_t<decltype (boost::fusion::at_c<0> (structToInsert))> >)
@@ -185,19 +190,8 @@ insertStruct (soci::session &sql, T const &structToInsert, bool foreignKeyConstr
       {
         if constexpr (IsVector<typename std::decay<decltype (boost::fusion::at_c<index> (structToInsert))>::type>)
           {
-            // TODO vector unsigned char support
-            // std::vector<uint8_t> tmp (1000000, 0);
-            // soci::blob b (sql);
-            // b.write (0, reinterpret_cast<char const *> (tmp.data ()), tmp.size ());
-            // soci::statement st (sql);
-            // st.alloc ();
-            // st.exchange (soci::use (0));
-            // st.exchange (soci::use (b));
-            // st.prepare ("insert into MyVectorClass(id,data) values(:val,:val1)");
-            // st.define_and_bind ();
-            // st.execute (true);
-            std::cout << "IMPLEMENT VECTOR UNSIGNED SUPPORT" << std::endl;
-            abort ();
+            b.write (0, reinterpret_cast<char const *> (boost::fusion::at_c<index> (structToInsert).data ()), boost::fusion::at_c<index> (structToInsert).size ());
+            st.exchange (soci::use (b));
           }
         else
           {
@@ -294,7 +288,18 @@ findStruct (soci::session &sql, std::string const &columnName, Y const &value)
   auto ss = std::stringstream{};
   ss << "SELECT * FROM " << tableName << " WHERE " << columnName << "=:value";
   auto result = T{};
-  st.exchange (soci::into (result));
+  auto indexAndBlob = std::map<u_int16_t, std::unique_ptr<soci::blob> >{};
+  boost::fusion::for_each (boost::mpl::range_c<int, 0, boost::fusion::result_of::size<T>::value> (), [&] (auto index) {
+    if constexpr (IsVector<typename std::decay<decltype (boost::fusion::at_c<index> (result))>::type>)
+      {
+        indexAndBlob.insert (std::make_pair (index, std::make_unique<soci::blob> (sql)));
+        st.exchange (soci::into (*indexAndBlob.at (index)));
+      }
+    else
+      {
+        st.exchange (soci::into (boost::fusion::at_c<index> (result)));
+      }
+  });
   auto tmp = std::string{};
   if constexpr (not std::integral<std::decay<Y> > and std::convertible_to<Y, std::string>)
     {
@@ -311,6 +316,16 @@ findStruct (soci::session &sql, std::string const &columnName, Y const &value)
   st.execute (true);
   if (sql.got_data ())
     {
+      boost::fusion::for_each (boost::mpl::range_c<int, 0, boost::fusion::result_of::size<T>::value> (), [&] (auto index) {
+        if constexpr (IsVector<typename std::decay<decltype (boost::fusion::at_c<index> (result))>::type>)
+          {
+            if (auto blob = indexAndBlob.find (index); blob != indexAndBlob.end ())
+              {
+                boost::fusion::at_c<index> (result) = typename std::decay<decltype (boost::fusion::at_c<index> (result))>::type (blob->second->get_len ());
+                blob->second->read (0, reinterpret_cast<char *> (boost::fusion::at_c<index> (result).data ()), blob->second->get_len ());
+              }
+          }
+      });
       return result;
     }
   else

@@ -74,7 +74,7 @@ BOOST_FUSION_DEFINE_STRUCT ((), MyClass, (int, someInt))
 BOOST_FUSION_DEFINE_STRUCT ((test), NestedClass, (int, id) (MyClass, myClass) (MyClass, yourClass))
 BOOST_FUSION_DEFINE_STRUCT ((), Board, (std::string, id) (std::string, gameId))
 BOOST_FUSION_DEFINE_STRUCT ((), Game, (std::string, id))
-BOOST_FUSION_DEFINE_STRUCT ((), MyVector, (int, someInt) (std::vector<uint8_t>, someVector))
+BOOST_FUSION_DEFINE_STRUCT ((), MyVector, (unsigned long, id) (std::vector<uint8_t>, someVector))
 
 namespace soci
 {
@@ -324,16 +324,17 @@ SCENARIO ("insert struct in database with insertStruct", "[insertStruct]")
     soci::session sql (soci::sqlite3, pathToTestDatabase);
     confu_soci::createTableForStruct<MyVector> (sql);
     REQUIRE (doesTableExist<MyVector> (sql));
-    // WHEN ("record has a member which is a vector of byte")
-    // {
-    //   insertStruct (sql, MyVector{}, true, true);
-    //   THEN ("generated id is different from id in struct")
-    //   {
-    //     auto idAndOptional = findStruct<IdAndOptional> (sql, "id", 1);
-    //     REQUIRE (idAndOptional.has_value ());
-    //     REQUIRE_FALSE (idAndOptional->optionalText.has_value ());
-    //   }
-    // }
+    WHEN ("record has a member which is a vector of byte")
+    {
+      insertStruct (sql, MyVector{ 1, std::vector<uint8_t> (1000000, 129) }, true, true);
+      THEN ("generated id is different from id in struct")
+      {
+        auto myVec = findStruct<MyVector> (sql, "id", 1);
+        REQUIRE (myVec.has_value ());
+        REQUIRE (myVec->someVector.size () == 1000000);
+        REQUIRE (myVec->someVector.at (0) == 129);
+      }
+    }
   }
 }
 
