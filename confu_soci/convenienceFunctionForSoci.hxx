@@ -97,6 +97,30 @@ template <typename T> concept printable = requires (T t)
   }
   ->std::same_as<std::ostream &>;
 };
+template <FusionSequence T>
+std::string
+generateInsert (T const &structToInsert)
+{
+  auto insertInto = std::stringstream{};
+  auto values = std::stringstream{};
+  insertInto << "INSERT INTO " << typeNameWithOutNamespace (structToInsert) << '(';
+  values << "VALUES(";
+  boost::fusion::for_each (boost::mpl::range_c<int, 0, boost::fusion::result_of::size<T>::value> (), [&] (auto index) {
+    insertInto << boost::fusion::extension::struct_member_name<T, index>::call ();
+    if (index < boost::fusion::size (structToInsert) - 1)
+      {
+        insertInto << ',';
+      }
+    values << ':' << boost::fusion::extension::struct_member_name<T, index>::call ();
+    if (index < boost::fusion::size (structToInsert) - 1)
+      {
+        values << ',';
+      }
+  });
+  insertInto << ") ";
+  values << ')';
+  return insertInto.str () + values.str ();
+}
 
 // about the shouldGenerateId option
 // id is string:
@@ -112,24 +136,9 @@ insertStruct (soci::session &sql, T const &structToInsert, bool foreignKeyConstr
   soci::statement st (sql);
   soci::blob b (sql);
   st.alloc ();
-  auto ss = std::stringstream{};
-  ss << "INSERT INTO " << typeNameWithOutNamespace (structToInsert) << '(';
-  boost::fusion::for_each (boost::mpl::range_c<int, 0, boost::fusion::result_of::size<T>::value> (), [&] (auto index) {
-    // TODO this is possible in one for_each it is not needed to iterate 2 times to create the statement string
-    ss << boost::fusion::extension::struct_member_name<T, index>::call ();
-    if (index < boost::fusion::size (structToInsert) - 1)
-      {
-        ss << ',';
-      }
-  });
-  ss << ") VALUES(";
+
   auto id = std::remove_reference_t<decltype (boost::fusion::at_c<0> (structToInsert))>{};
   boost::fusion::for_each (boost::mpl::range_c<int, 0, boost::fusion::result_of::size<T>::value> (), [&] (auto index) {
-    ss << ':' << boost::fusion::extension::struct_member_name<T, index>::call ();
-    if (index < boost::fusion::size (structToInsert) - 1)
-      {
-        ss << ',';
-      }
     if constexpr (index == 0)
       {
         if constexpr (std::is_integral_v<std::remove_reference_t<decltype (boost::fusion::at_c<0> (structToInsert))> >)
@@ -182,7 +191,6 @@ insertStruct (soci::session &sql, T const &structToInsert, bool foreignKeyConstr
           }
       }
   });
-  ss << ')';
   auto foreignKeysEnabled = 0;
   sql << "PRAGMA foreign_keys;", soci::into (foreignKeysEnabled);
   try
@@ -191,7 +199,7 @@ insertStruct (soci::session &sql, T const &structToInsert, bool foreignKeyConstr
         {
           sql << "PRAGMA foreign_keys = ON;";
         }
-      st.prepare (ss.str ());
+      st.prepare (generateInsert (structToInsert));
       st.define_and_bind ();
       st.execute (true);
       if (foreignKeyConstraints && foreignKeysEnabled == 0)

@@ -114,6 +114,7 @@ namespace test
 {
 TEST_CASE ("type name with out namespace") { REQUIRE (typeNameWithOutNamespace (Player{}) == "Player"); }
 TEST_CASE ("type name with namespace") { REQUIRE (typeName (Player{}) == "test::Player"); }
+TEST_CASE ("generateInsert") { REQUIRE (generateInsert (EasyClass{}) == "INSERT INTO EasyClass(playerId,points) VALUES(:playerId,:points)"); }
 
 TEST_CASE ("doesTableExists")
 {
@@ -634,4 +635,5 @@ SCENARIO ("drop tables for mpl list in database with dropTables", "[dropTables]"
     }
   }
 }
+
 }
