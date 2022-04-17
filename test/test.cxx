@@ -320,8 +320,6 @@ SCENARIO ("insert struct in database with insertStruct", "[insertStruct]")
   }
   GIVEN ("a connection to a database where the table does exists")
   {
-    // TODO test std::vector<unsigned char>
-    // TODO test std::vector<std::tuple<unsigned char, char>>
     resetTestDatabase ();
     soci::session sql (soci::sqlite3, pathToTestDatabase);
     confu_soci::createTableForStruct<MyVector> (sql);
@@ -371,6 +369,7 @@ SCENARIO ("insert struct in database with insertStruct", "[insertStruct]")
         REQUIRE (myVec.has_value ());
         REQUIRE (myVec->someVector.size () == 1000000);
         REQUIRE (myVec->someVector.at (0) == 129);
+        REQUIRE (myVec->direction == Direction::Down);
       }
     }
   }
