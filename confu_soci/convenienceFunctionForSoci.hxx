@@ -50,38 +50,22 @@
 // #include <soci/in
 namespace soci
 {
-// template <typename E> struct type_conversion<E, typename std::enable_if<std::is_enum<E>::value>::type>
-// {
-//   typedef std::string base_type;
-//   static void
-//   from_base (std::string const &v, indicator /* ind */, E &p)
-//   {
-//     p = magic_enum::enum_cast<E> (v).value ();
-//   }
+template <typename E> struct type_conversion<E, typename std::enable_if<std::is_enum<E>::value>::type>
+{
+  typedef std::string base_type;
+  static void
+  from_base (std::string const &v, indicator /* ind */, E &p)
+  {
+    p = magic_enum::enum_cast<E> (v).value ();
+  }
 
-//   static void
-//   to_base (const E &p, std::string &v, indicator &ind)
-//   {
-//     v = std::string{ magic_enum::enum_name<E> (p) };
-//     ind = i_ok;
-//   }
-// };
-// template <typename E> struct type_conversion<E, typename std::enable_if<std::is_enum<E>::value>::type>
-// {
-//   typedef std::string base_type;
-//   static void
-//   from_base (std::string const &v, indicator /* ind */, E &p)
-//   {
-//     p = magic_enum::enum_cast<E> (v).value ();
-//   }
-
-//   static void
-//   to_base (const E &p, std::string &v, indicator &ind)
-//   {
-//     v = std::string{ magic_enum::enum_name<E> (p) };
-//     ind = i_ok;
-//   }
-// };
+  static void
+  to_base (const E &p, std::string &v, indicator &ind)
+  {
+    v = std::string{ magic_enum::enum_name<E> (p) };
+    ind = i_ok;
+  }
+};
 }
 
 namespace confu_soci
