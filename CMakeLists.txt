@@ -1,11 +1,3 @@
- #set(CMAKE_CXX_COMPILER "/usr/local/bin/clang++")
- #set(CMAKE_C_COMPILER "/usr/local/bin/clang")
-#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fcoroutines")
-# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ")
- #set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -v")
-#-fcoroutines-ts -lc++experimental")
-
-#set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -pthread -v")
 cmake_minimum_required(VERSION 3.17)
 project(convenienceFunctionForSoci VERSION 1.0.0
   DESCRIPTION convenienceFunctionForSoci
@@ -13,15 +5,13 @@ project(convenienceFunctionForSoci VERSION 1.0.0
   ) 
 cmake_policy(SET CMP0015 NEW)
 
+find_package(Boost REQUIRED)
+find_package(SOCI REQUIRED)
+find_package(Catch2 REQUIRED)
+find_package(magic_enum REQUIRED)
 
 
-
-########## enable cache system
 include(cmake/Cache.cmake)
-
-#set(CMAKE_EXECUTABLE_SUFFIX ".html")
-########## link against the libs to apply the configurations to the target
-# compiler warnings
 set(PROJECT_WARNINGS project_warning)
 add_library(${PROJECT_WARNINGS} INTERFACE)
 include(cmake/CompilerWarnings.cmake)
@@ -41,14 +31,6 @@ enable_sanitizers(${PROJECT_OPTIONS})
 # allow for static analysis options
 #include(cmake/StaticAnalyzers.cmake) 
  
-######## conan setup
-include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
-conan_basic_setup(TARGETS)
-
-
-####### create executable
-
-
 set(TARGET_NAME convenienceFunctionForSoci)
 set(SOURCES_${TARGET_NAME})
 set(HEADER_${TARGET_NAME})
@@ -78,14 +60,10 @@ IF(BUILD_TESTS)
   )
   target_link_libraries(${TEST_TARGET_NAME}
     ${PROJECT_OPTIONS}
-    CONAN_PKG::catch2
-    CONAN_PKG::boost
-    CONAN_PKG::soci
-#todo fix circular link error
-#    /home/walde/.conan/data/soci/4.0.2/_/_/package/7422c077bee1759414c068d4abf84979d833ee12/lib/libsoci_sqlite3.a
-    #/home/walde/.conan/data/soci/4.0.2/_/_/package/d16ea4d31df362ca8118e30fa844fb41cde58549/lib/libsoci_sqlite3.a
-     CONAN_PKG::magic_enum
-     #${CONAN_LIBS}
+          soci::soci
+          SQLite::SQLite3
+          Catch2::Catch2WithMain
+          magic_enum::magic_enum
   )
   if (CMAKE_BINARY_DIR)
     target_compile_definitions(${TEST_TARGET_NAME} PRIVATE PATH_TO_BINARY="${CMAKE_BINARY_DIR}")
@@ -115,13 +93,8 @@ target_include_directories(${TARGET_NAME} PRIVATE
   
 
 target_link_libraries(${TARGET_NAME} PRIVATE ${PROJECT_WARNINGS} ${PROJECT_OPTIONS}
-CONAN_PKG::boost
-CONAN_PKG::soci
-
-#/home/walde/.conan/data/soci/4.0.2/_/_/package/7422c077bee1759414c068d4abf84979d833ee12/lib/libsoci_sqlite3.a
-#/home/walde/.conan/data/soci/4.0.2/_/_/package/d16ea4d31df362ca8118e30fa844fb41cde58549/lib/libsoci_sqlite3.a
-CONAN_PKG::magic_enum
-#${CONAN_LIBS}
+        soci::soci
+        magic_enum::magic_enum
 )
 
 
