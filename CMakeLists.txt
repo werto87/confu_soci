@@ -95,12 +95,4 @@ target_link_libraries(${TARGET_NAME} PRIVATE ${PROJECT_WARNINGS} ${PROJECT_OPTIO
         soci::soci
         magic_enum::magic_enum
 )
-
-
-
-#print all variables used in cmake
-# get_cmake_property(_variableNames VARIABLES)
-# list (SORT _variableNames)
-# foreach (_variableName ${_variableNames})
-#    message(STATUS "${_variableName}=${${_variableName}}")
-# endforeach()
+install(TARGETS ${TARGET_NAME})
