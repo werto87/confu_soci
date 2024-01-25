@@ -28,7 +28,7 @@ target_include_directories(${TARGET_NAME_LIB} PUBLIC
 target_link_libraries(${TARGET_NAME_LIB} PUBLIC
         ${PROJECT_WARNINGS}
         ${PROJECT_OPTIONS}
-        Boost::boost
+        boost::boost
         soci::soci
         magic_enum::magic_enum
         )
