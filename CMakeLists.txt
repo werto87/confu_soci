@@ -57,7 +57,7 @@ IF(BUILD_TESTS)
     ${TEST_HEADER_${TARGET_NAME}}
     ${TEST_SOURCES_${TARGET_NAME}}
   )
-  target_link_libraries(${TEST_TARGET_NAME}
+  target_link_libraries(${TEST_TARGET_NAME} PUBLIC
     ${PROJECT_OPTIONS}
           soci::soci
           SQLite::SQLite3
@@ -85,14 +85,14 @@ ${HEADER_${TARGET_NAME}}
 
 
 
-target_include_directories(${TARGET_NAME} PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
-target_include_directories(${TARGET_NAME} PRIVATE
+target_include_directories(${TARGET_NAME} PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
+target_include_directories(${TARGET_NAME} PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
   $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
   )
   
 
-target_link_libraries(${TARGET_NAME} PRIVATE ${PROJECT_WARNINGS} ${PROJECT_OPTIONS}
+target_link_libraries(${TARGET_NAME} PUBLIC ${PROJECT_WARNINGS} ${PROJECT_OPTIONS}
         soci::soci
         magic_enum::magic_enum
         boost::boost
