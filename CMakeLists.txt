@@ -92,7 +92,7 @@ target_include_directories(${TARGET_NAME} PUBLIC
   )
   
 
-target_link_libraries(${TARGET_NAME} PUBLIC ${PROJECT_WARNINGS} ${PROJECT_OPTIONS}
+target_link_libraries(${TARGET_NAME} INTERFACE ${PROJECT_WARNINGS} ${PROJECT_OPTIONS}
         soci::soci
         magic_enum::magic_enum
         boost::boost
