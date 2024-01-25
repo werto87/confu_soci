@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.27)
-project(convenienceFunctionForSoci VERSION 1.0.0
-  DESCRIPTION convenienceFunctionForSoci
+project(confu_soci VERSION 1.0.0
+  DESCRIPTION confu_soci
   LANGUAGES CXX
   ) 
 cmake_policy(SET CMP0015 NEW)
@@ -95,4 +95,3 @@ target_link_libraries(${TARGET_NAME} PRIVATE ${PROJECT_WARNINGS} ${PROJECT_OPTIO
         soci::soci
         magic_enum::magic_enum
 )
-install(TARGETS ${TARGET_NAME})
