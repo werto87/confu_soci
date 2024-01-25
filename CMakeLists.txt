@@ -63,6 +63,7 @@ IF(BUILD_TESTS)
           SQLite::SQLite3
           Catch2::Catch2WithMain
           magic_enum::magic_enum
+          boost::boost
   )
   if (CMAKE_BINARY_DIR)
     target_compile_definitions(${TEST_TARGET_NAME} PRIVATE PATH_TO_BINARY="${CMAKE_BINARY_DIR}")
@@ -94,4 +95,5 @@ target_include_directories(${TARGET_NAME} PRIVATE
 target_link_libraries(${TARGET_NAME} PRIVATE ${PROJECT_WARNINGS} ${PROJECT_OPTIONS}
         soci::soci
         magic_enum::magic_enum
+        boost::boost
 )
