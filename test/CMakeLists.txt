@@ -1,15 +1,19 @@
-set(TEST_SOURCES_${TARGET_NAME} ${TEST_SOURCES_${TARGET_NAME}}
-${CMAKE_CURRENT_SOURCE_DIR}/main.cxx 
-${CMAKE_CURRENT_SOURCE_DIR}/test.cxx
-${CMAKE_CURRENT_SOURCE_DIR}/testHelper.cxx 
-PARENT_SCOPE
-)
+set(TEST_TARGET_NAME _test)
+add_executable(${TEST_TARGET_NAME}
+        main.cxx
+        test.cxx
+        testHelper.cxx
+        )
+find_package(Catch2 REQUIRED)
+target_link_libraries(${TEST_TARGET_NAME}
+        ${TARGET_NAME_LIB}
+        Catch2::Catch2WithMain
+        )
+target_include_directories(${TEST_TARGET_NAME} PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}
+        ${CMAKE_SOURCE_DIR}
+        )
 
-
-set(TEST_HEADER_${TARGET_NAME} ${TEST_HEADER_${TARGET_NAME}}
-${CMAKE_CURRENT_SOURCE_DIR}/constant.hxx
-${CMAKE_CURRENT_SOURCE_DIR}/testHelper.hxx 
-PARENT_SCOPE
-)
-
-
+add_test(NAME ${TEST_TARGET_NAME}
+        COMMAND ${TEST_TARGET_NAME} -r junit
+        )

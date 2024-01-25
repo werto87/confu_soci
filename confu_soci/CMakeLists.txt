@@ -1,10 +1,3 @@
-set(HEADER_${TARGET_NAME} ${HEADER_${TARGET_NAME}}
-${CMAKE_CURRENT_SOURCE_DIR}/convenienceFunctionForSoci.hxx
-${CMAKE_CURRENT_SOURCE_DIR}/concept.hxx
-PARENT_SCOPE
-)
-
-set(SOURCES_${TARGET_NAME} ${SOURCES_${TARGET_NAME}}
-${CMAKE_CURRENT_SOURCE_DIR}/convenienceFunctionForSoci.cxx 
-PARENT_SCOPE
-)
+ target_sources(${TARGET_NAME_LIB} PRIVATE
+         convenienceFunctionForSoci.cxx
+         )
