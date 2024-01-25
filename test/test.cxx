@@ -21,7 +21,7 @@
 #include <confu_soci/convenienceFunctionForSoci.hxx>
 #include <cstdint>
 #include <exception>
-#include <magic_enum.hpp>
+#include <magic_enum/magic_enum.hpp>
 #include <soci/exchange-traits.h>
 #include <soci/session.h>
 #include <soci/soci.h>

@@ -34,7 +34,7 @@
 #include <exception>
 #include <iostream>
 #include <istream>
-#include <magic_enum.hpp>
+#include <magic_enum/magic_enum.hpp>
 #include <ostream>
 #include <soci/boost-fusion.h>
 #include <soci/boost-gregorian-date.h>
