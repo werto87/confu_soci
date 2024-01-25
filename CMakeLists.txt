@@ -7,7 +7,6 @@ cmake_policy(SET CMP0015 NEW)
 
 find_package(Boost REQUIRED)
 find_package(SOCI REQUIRED)
-find_package(Catch2 REQUIRED)
 find_package(magic_enum REQUIRED)
 
 
@@ -45,7 +44,7 @@ add_subdirectory(confu_soci)
 ####### create executable
 OPTION(BUILD_TESTS "enable tests" OFF)
 IF(BUILD_TESTS)
-
+  find_package(Catch2 REQUIRED)
   enable_testing()
   set(TEST_TARGET_NAME _test)
   set(TEST_SOURCES_${TARGET_NAME})
