@@ -31,7 +31,7 @@ enable_sanitizers(${PROJECT_OPTIONS})
 # allow for static analysis options
 #include(cmake/StaticAnalyzers.cmake) 
  
-set(TARGET_NAME convenienceFunctionForSoci)
+set(TARGET_NAME confu_soci)
 set(SOURCES_${TARGET_NAME})
 set(HEADER_${TARGET_NAME})
 
