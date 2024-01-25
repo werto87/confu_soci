@@ -1,12 +1,12 @@
-cmake_minimum_required(VERSION 3.17)
+cmake_minimum_required(VERSION 3.27)
 project(project VERSION 1.0.0
         DESCRIPTION project
         LANGUAGES CXX
         )
-find_package(Boost REQUIRED)
-find_package(magic_enum REQUIRED)
-find_package(SOCI REQUIRED)
 include(cmake/Cache.cmake)
+find_package(Boost REQUIRED)
+find_package(SOCI REQUIRED)
+find_package(magic_enum REQUIRED)
 set(PROJECT_WARNINGS project_warning)
 add_library(${PROJECT_WARNINGS} INTERFACE)
 include(cmake/CompilerWarnings.cmake)
@@ -21,11 +21,14 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(TARGET_NAME_LIB confu_soci)
 add_library(${TARGET_NAME_LIB})
 add_subdirectory(confu_soci)
-####### create executable
+target_include_directories(${TARGET_NAME_LIB} PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+        $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+        )
 target_link_libraries(${TARGET_NAME_LIB} PUBLIC
         ${PROJECT_WARNINGS}
         ${PROJECT_OPTIONS}
-        Boost::headers
+        Boost::boost
         soci::soci
         magic_enum::magic_enum
         )
