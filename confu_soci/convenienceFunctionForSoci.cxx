@@ -1,4 +1,4 @@
-#include "confu_soci/convenienceFunctionForSoci.hxx"
+#include "convenienceFunctionForSoci.hxx"
 
 namespace confu_soci
 {
