@@ -22,8 +22,7 @@ set(TARGET_NAME_LIB confu_soci)
 add_library(${TARGET_NAME_LIB})
 add_subdirectory(confu_soci)
 target_include_directories(${TARGET_NAME_LIB} PUBLIC
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
-        $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+        ${CMAKE_CURRENT_SOURCE_DIR}
         )
 target_link_libraries(${TARGET_NAME_LIB} PUBLIC
         ${PROJECT_WARNINGS}
