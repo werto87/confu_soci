@@ -4,6 +4,9 @@ add_executable(${TEST_TARGET_NAME}
         test.cxx
         testHelper.cxx
         )
+if (CMAKE_BINARY_DIR)
+    target_compile_definitions(${TEST_TARGET_NAME} PRIVATE PATH_TO_BINARY="${CMAKE_BINARY_DIR}")
+endif()
 find_package(Catch2 REQUIRED)
 target_link_libraries(${TEST_TARGET_NAME}
         ${TARGET_NAME_LIB}
