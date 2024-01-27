@@ -16,6 +16,6 @@ class Project(ConanFile):
     def requirements(self):
         self.requires("soci/4.0.3")
         self.requires("catch2/2.13.7")
-        self.requires("magic_enum/[>=0.7.2]")
+        self.requires("magic_enum/[>=0.9.5 <10]")
         self.requires("boost/1.83.0")
 
