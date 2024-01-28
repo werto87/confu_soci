@@ -7,6 +7,11 @@ install(FILES
         concept.hxx
         DESTINATION include/confu_soci)
 
+find_package(SOCI)
+find_package(magic_enum)
+find_package(Boost)
+
+
 target_link_libraries(confu_soci PUBLIC
         ${PROJECT_WARNINGS}
         ${PROJECT_OPTIONS}
