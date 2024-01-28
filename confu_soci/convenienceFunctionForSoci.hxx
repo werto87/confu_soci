@@ -94,8 +94,7 @@ template <typename T> concept printable = requires (T t)
 {
   {
     std::cout << t
-  }
-  ->std::same_as<std::ostream &>;
+    } -> std::same_as<std::ostream &>;
 };
 template <FusionSequence T>
 std::string
@@ -136,7 +135,7 @@ insertStruct (soci::session &sql, T const &structToInsert, bool foreignKeyConstr
   soci::statement st (sql);
   soci::blob b (sql);
   st.alloc ();
-  using IdType= std::remove_reference_t<decltype (boost::fusion::at_c<0> (structToInsert))> ;
+  using IdType = std::remove_reference_t<decltype (boost::fusion::at_c<0> (structToInsert))>;
   auto id = IdType{};
   boost::fusion::for_each (boost::mpl::range_c<int, 0, boost::fusion::result_of::size<T>::value> (), [&] (auto index) {
     if constexpr (index == 0)
@@ -149,7 +148,7 @@ insertStruct (soci::session &sql, T const &structToInsert, bool foreignKeyConstr
                 if (sql.get_last_insert_id (typeNameWithOutNamespace (structToInsert), newId))
                   {
                     newId++;
-                    id = boost::numeric_cast<IdType>(newId);
+                    id = boost::numeric_cast<IdType> (newId);
                     st.exchange (soci::use (id));
                   }
                 else
