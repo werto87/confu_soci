@@ -1,22 +1,17 @@
 add_executable(_test
-        main.cxx
         test.cxx
         testHelper.cxx
         )
-if (CMAKE_BINARY_DIR)
-    target_compile_definitions(_test PRIVATE PATH_TO_BINARY="${CMAKE_BINARY_DIR}")
-endif()
-
-find_package(Catch2 REQUIRED)
+find_package(Catch2)
 target_link_libraries(_test
+        myproject_options
+        myproject_warnings
         confu_soci
         Catch2::Catch2WithMain
         )
-target_include_directories(_test PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR}
-        ${CMAKE_SOURCE_DIR}
-        )
-
+target_include_directories(_test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_SOURCE_DIR})
+if (CMAKE_BINARY_DIR)
+    target_compile_definitions(_test PRIVATE PATH_TO_BINARY="${CMAKE_BINARY_DIR}")
+endif ()
 add_test(NAME _test
-        COMMAND _test -r junit
-        )
+        COMMAND _test -r junit)
