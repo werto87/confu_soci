@@ -16,6 +16,7 @@ find_package(magic_enum)
 find_package(Boost)
 
 target_link_libraries(confu_soci PUBLIC
+        SQLite::SQLite3
         soci::soci
         magic_enum::magic_enum
         boost::boost
