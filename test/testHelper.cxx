@@ -1,4 +1,4 @@
-#include <test/testHelper.hxx>
+#include <testHelper.hxx>
 
 void
 test::resetTestDatabase ()

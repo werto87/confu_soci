@@ -3,7 +3,7 @@
 
 #include <filesystem>
 #include <iostream>
-#include <test/constant.hxx>
+#include <constant.hxx>
 namespace test
 {
 void resetTestDatabase ();

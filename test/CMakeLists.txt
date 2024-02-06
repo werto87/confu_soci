@@ -9,7 +9,7 @@ target_link_libraries(_test
         confu_soci
         Catch2::Catch2WithMain
         )
-target_include_directories(_test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_SOURCE_DIR})
+target_include_directories(_test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 if (CMAKE_BINARY_DIR)
     target_compile_definitions(_test PRIVATE PATH_TO_BINARY="${CMAKE_BINARY_DIR}")
 endif ()

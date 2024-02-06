@@ -21,8 +21,10 @@ target_link_libraries(confu_soci PUBLIC
         boost::boost
         )
 
-target_include_directories(confu_soci INTERFACE $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
-        $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/include>)
+target_include_directories(confu_soci
+        PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}>
+        )
 
 target_compile_features(confu_soci PUBLIC cxx_std_20)
 
@@ -34,6 +36,7 @@ set_target_properties(
 
 install(FILES
         convenienceFunctionForSoci.hxx
+        concept.hxx
         DESTINATION include/confu_soci
         )
 install(TARGETS confu_soci DESTINATION lib)
