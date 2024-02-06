@@ -17,3 +17,4 @@ class Project(ConanFile):
         self.requires("catch2/2.13.7")
         self.requires("magic_enum/[>=0.9.5 <10]")
         self.requires("boost/1.83.0")
+        self.requires("sqlite3/3.44.2")
