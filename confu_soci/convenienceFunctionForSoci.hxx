@@ -21,6 +21,7 @@
 #include <boost/mpl/for_each.hpp>
 #include <boost/mpl/if.hpp>
 #include <boost/mpl/range_c.hpp>
+#include <boost/numeric/conversion/cast.hpp>
 #include <boost/optional.hpp>
 #include <boost/optional/optional.hpp>
 #include <boost/optional/optional_io.hpp>
@@ -94,7 +95,7 @@ template <typename T> concept printable = requires (T t)
 {
   {
     std::cout << t
-    } -> std::same_as<std::ostream &>;
+  } -> std::same_as<std::ostream &>;
 };
 template <FusionSequence T>
 std::string
