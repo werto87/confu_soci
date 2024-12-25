@@ -21,7 +21,7 @@ target_link_libraries(confu_soci PUBLIC
         SQLite::SQLite3
         soci::soci
         magic_enum::magic_enum
-        boost::boost
+        Boost::headers
         )
 
 target_include_directories(confu_soci
