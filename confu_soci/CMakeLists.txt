@@ -14,11 +14,9 @@ add_library(myproject::confu_soci ALIAS confu_soci)
 find_package(SOCI)
 find_package(magic_enum)
 find_package(Boost)
-find_package(SQLite3)
 
 
 target_link_libraries(confu_soci PUBLIC
-        SQLite::SQLite3
         soci::soci
         magic_enum::magic_enum
         Boost::headers
