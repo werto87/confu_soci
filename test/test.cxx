@@ -642,7 +642,7 @@ operator== (EasyClass const &lhs, EasyClass const &rhs)
 }
 SCENARIO ("find multiple structs and sort them with findStructsOrderBy", "[findStructsOrderBy]")
 {
-  GIVEN ("a connection to a database where the table exist and has 3 a records")
+  GIVEN ("a connection to a database where the table exist and has 3 records")
   {
     resetTestDatabase ();
     soci::session sql (soci::sqlite3, pathToTestDatabase);
@@ -651,13 +651,18 @@ SCENARIO ("find multiple structs and sort them with findStructsOrderBy", "[findS
     REQUIRE_NOTHROW (insertStruct (sql, EasyClass{ "222", 13 }));
     REQUIRE_NOTHROW (insertStruct (sql, EasyClass{ "111", 2 }));
     REQUIRE_NOTHROW (insertStruct (sql, EasyClass{ "33", 44 }));
-    WHEN ("findStructsOrderBy")
+    WHEN ("findStructsOrderBy limit to 3")
     {
       auto results = findStructsOrderBy<EasyClass> (sql, 3, "points", OrderMethod::Ascending);
       auto expectedValues = std::vector<EasyClass>{ { "111", 2 }, { "222", 13 }, { "33", 44 } };
       THEN ("3 records are found ordered asc by points") { REQUIRE (results == expectedValues); }
     }
+    WHEN ("findStructsOrderBy limit to 2")
+    {
+      auto results = findStructsOrderBy<EasyClass> (sql, 2, "points", OrderMethod::Ascending);
+      auto expectedValues = std::vector<EasyClass>{ { "111", 2 }, { "222", 13 } };
+      THEN ("2 records are found ordered asc by points") { REQUIRE (results == expectedValues); }
+    }
   }
 }
-
 }
