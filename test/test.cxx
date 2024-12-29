@@ -640,7 +640,7 @@ operator== (EasyClass const &lhs, EasyClass const &rhs)
 {
   return lhs.playerId == rhs.playerId && lhs.points == rhs.points;
 }
-SCENARIO ("find multiple structs and sort them with findStructsOrderBy", "[findStructsOrderBy]")
+SCENARIO ("find 3 structs and sort them with findStructsOrderBy", "[findStructsOrderBy]")
 {
   GIVEN ("a connection to a database where the table exist and has 3 records")
   {
@@ -686,6 +686,22 @@ SCENARIO ("find multiple structs and sort them with findStructsOrderBy", "[findS
       auto results = findStructsOrderBy<EasyClass> (sql, 100, "points", OrderMethod::Descending);
       auto expectedValues = std::vector<EasyClass>{ { "33", 44 }, { "222", 13 }, { "111", 2 } };
       THEN ("3 records are found ordered desc by points") { REQUIRE (results == expectedValues); }
+    }
+  }
+}
+SCENARIO ("find 0 structs", "[findStructsOrderBy]")
+{
+  GIVEN ("a connection to a database where the table exist and has 0 records")
+  {
+    resetTestDatabase ();
+    soci::session sql (soci::sqlite3, pathToTestDatabase);
+    createTableForStruct<EasyClass> (sql);
+    REQUIRE (doesTableExist<EasyClass> (sql));
+    WHEN ("findStructsOrderBy limit to 3 asc")
+    {
+      auto results = findStructsOrderBy<EasyClass> (sql, 3, "points", OrderMethod::Ascending);
+      auto expectedValues = std::vector<EasyClass>{};
+      THEN ("0 records are found") { REQUIRE (results == expectedValues); }
     }
   }
 }
