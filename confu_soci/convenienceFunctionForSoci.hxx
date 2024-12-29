@@ -412,5 +412,55 @@ dropTables (soci::session &sql)
   });
   return result;
 }
+
+enum class OrderMethod
+{
+  Ascending,
+  Descending
+};
+
+template <typename T, typename Y>
+std::vector<Y>
+findColumnOrderBy (soci::session &sql, std::string const &resultColumnName, uint64_t maxColumnCount, std::string const &columnToOrder, OrderMethod orderMethod = OrderMethod::Ascending)
+{
+  auto results = std::vector<Y> (maxColumnCount);
+  auto const &tableName = confu_soci::typeNameWithOutNamespace (T{});
+  soci::statement st (sql);
+  st.alloc ();
+  auto ss = std::stringstream{};
+  ss << "SELECT " << resultColumnName << " FROM " << tableName << " ORDER BY " << columnToOrder << ((orderMethod == OrderMethod::Ascending) ? " ASC" : " DESC");
+  st.exchange (soci::into (results));
+  st.prepare (ss.str ());
+  st.define_and_bind ();
+  st.execute (true);
+  return results;
+}
+
+template <typename T>
+std::vector<T>
+findStructsOrderBy (soci::session &sql, uint64_t maxColumnCount, std::string const &columnToOrderDesc, OrderMethod orderMethod = OrderMethod::Ascending)
+{
+  soci::transaction tr (sql);
+  auto result = std::vector<T>{};
+  boost::fusion::for_each (boost::mpl::range_c<int, 0, boost::fusion::result_of::size<T>::value> (), [&] (auto index) {
+    [[maybe_unused]] auto const &memberName = boost::fusion::extension::struct_member_name<T, index>::call ();
+    using currentType = typename std::decay<decltype (boost::fusion::at_c<index> (result.front ()))>::type;
+    if constexpr (confu_soci::IsVector<currentType>)
+      {
+        std::terminate ();
+      }
+    else
+      {
+        auto columns = findColumnOrderBy<T, currentType> (sql, memberName, maxColumnCount, columnToOrderDesc, orderMethod);
+        if (index == 0) result.resize (columns.size ());
+        for (uint64_t i = 0; i < columns.size (); ++i)
+          {
+            boost::fusion::at_c<index> (result.at (i)) = std::move (columns.at (i));
+          }
+      }
+  });
+  tr.commit ();
+  return result;
+}
 }
 #endif /* B7C2FAB9_F015_4288_92A6_13D53DA86731 */

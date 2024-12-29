@@ -635,5 +635,29 @@ SCENARIO ("drop tables for mpl list in database with dropTables", "[dropTables]"
     }
   }
 }
+bool
+operator== (EasyClass const &lhs, EasyClass const &rhs)
+{
+  return lhs.playerId == rhs.playerId && lhs.points == rhs.points;
+}
+SCENARIO ("find multiple structs and sort them with findStructsOrderBy", "[findStructsOrderBy]")
+{
+  GIVEN ("a connection to a database where the table exist and has 3 a records")
+  {
+    resetTestDatabase ();
+    soci::session sql (soci::sqlite3, pathToTestDatabase);
+    createTableForStruct<EasyClass> (sql);
+    REQUIRE (doesTableExist<EasyClass> (sql));
+    REQUIRE_NOTHROW (insertStruct (sql, EasyClass{ "222", 13 }));
+    REQUIRE_NOTHROW (insertStruct (sql, EasyClass{ "111", 2 }));
+    REQUIRE_NOTHROW (insertStruct (sql, EasyClass{ "33", 44 }));
+    WHEN ("findStructsOrderBy")
+    {
+      auto results = findStructsOrderBy<EasyClass> (sql, 3, "points", OrderMethod::Ascending);
+      auto expectedValues = std::vector<EasyClass>{ { "111", 2 }, { "222", 13 }, { "33", 44 } };
+      THEN ("3 records are found ordered asc by points") { REQUIRE (results == expectedValues); }
+    }
+  }
+}
 
 }
