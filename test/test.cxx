@@ -651,17 +651,41 @@ SCENARIO ("find multiple structs and sort them with findStructsOrderBy", "[findS
     REQUIRE_NOTHROW (insertStruct (sql, EasyClass{ "222", 13 }));
     REQUIRE_NOTHROW (insertStruct (sql, EasyClass{ "111", 2 }));
     REQUIRE_NOTHROW (insertStruct (sql, EasyClass{ "33", 44 }));
-    WHEN ("findStructsOrderBy limit to 3")
+    WHEN ("findStructsOrderBy limit to 3 asc")
     {
       auto results = findStructsOrderBy<EasyClass> (sql, 3, "points", OrderMethod::Ascending);
       auto expectedValues = std::vector<EasyClass>{ { "111", 2 }, { "222", 13 }, { "33", 44 } };
       THEN ("3 records are found ordered asc by points") { REQUIRE (results == expectedValues); }
     }
-    WHEN ("findStructsOrderBy limit to 2")
+    WHEN ("findStructsOrderBy limit to 2 asc ")
     {
       auto results = findStructsOrderBy<EasyClass> (sql, 2, "points", OrderMethod::Ascending);
       auto expectedValues = std::vector<EasyClass>{ { "111", 2 }, { "222", 13 } };
       THEN ("2 records are found ordered asc by points") { REQUIRE (results == expectedValues); }
+    }
+    WHEN ("findStructsOrderBy limit to bigger than items in database asc ")
+    {
+      auto results = findStructsOrderBy<EasyClass> (sql, 100, "points", OrderMethod::Ascending);
+      auto expectedValues = std::vector<EasyClass>{ { "111", 2 }, { "222", 13 }, { "33", 44 } };
+      THEN ("3 records are found ordered asc by points") { REQUIRE (results == expectedValues); }
+    }
+    WHEN ("findStructsOrderBy limit to 3 desc")
+    {
+      auto results = findStructsOrderBy<EasyClass> (sql, 3, "points", OrderMethod::Descending);
+      auto expectedValues = std::vector<EasyClass>{ { "33", 44 }, { "222", 13 }, { "111", 2 } };
+      THEN ("3 records are found ordered desc by points") { REQUIRE (results == expectedValues); }
+    }
+    WHEN ("findStructsOrderBy limit to 2 desc ")
+    {
+      auto results = findStructsOrderBy<EasyClass> (sql, 2, "points", OrderMethod::Descending);
+      auto expectedValues = std::vector<EasyClass>{ { "33", 44 }, { "222", 13 } };
+      THEN ("2 records are found ordered desc by points") { REQUIRE (results == expectedValues); }
+    }
+    WHEN ("findStructsOrderBy limit to bigger than items in database desc ")
+    {
+      auto results = findStructsOrderBy<EasyClass> (sql, 100, "points", OrderMethod::Descending);
+      auto expectedValues = std::vector<EasyClass>{ { "33", 44 }, { "222", 13 }, { "111", 2 } };
+      THEN ("3 records are found ordered desc by points") { REQUIRE (results == expectedValues); }
     }
   }
 }
