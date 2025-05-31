@@ -212,7 +212,7 @@ SCENARIO ("insert struct in database with insertStruct", "[insertStruct]")
         }
       catch (soci::soci_error const &e)
         {
-          THEN ("throws exception") { REQUIRE (soci::soci_error::error_category::unknown == e.get_error_category ()); }
+          THEN ("throws exception") { REQUIRE (soci::soci_error::error_category::constraint_violation == e.get_error_category ()); }
         }
     }
   }
@@ -249,7 +249,7 @@ SCENARIO ("insert struct in database with insertStruct", "[insertStruct]")
         }
       catch (soci::soci_error const &e)
         {
-          THEN ("throws exception") { REQUIRE (soci::soci_error::error_category::unknown == e.get_error_category ()); }
+          THEN ("throws exception") { REQUIRE (soci::soci_error::error_category::constraint_violation == e.get_error_category ()); }
         }
     }
   }
@@ -470,7 +470,7 @@ SCENARIO ("upsert struct in database with upsertStruct", "[upsertStruct]")
         }
       catch (soci::soci_error const &e)
         {
-          THEN ("throws exception") { REQUIRE (soci::soci_error::error_category::unknown == e.get_error_category ()); }
+          THEN ("throws exception") { REQUIRE (soci::soci_error::error_category::system_error == e.get_error_category ()); }
         }
     }
   }
@@ -517,7 +517,7 @@ SCENARIO ("find struct in database with findStruct", "[findStruct]")
         }
       catch (soci::soci_error const &e)
         {
-          THEN ("throws exception") { REQUIRE (soci::soci_error::error_category::unknown == e.get_error_category ()); }
+          THEN ("throws exception") { REQUIRE (soci::soci_error::error_category::system_error == e.get_error_category ()); }
         }
     }
   }
