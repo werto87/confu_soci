@@ -4,3 +4,4 @@ build
 test_db.session.sql
 test.session.sql
 .ccls-cache
+compile_commands.json
