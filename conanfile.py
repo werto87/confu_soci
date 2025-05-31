@@ -19,7 +19,7 @@ class Project(ConanFile):
 
 
     def requirements(self):
-        self.requires("soci/4.0.3@modern-durak")
+        self.requires("soci/4.1.2@modern-durak")
         self.requires("catch2/2.13.7")
         self.requires("magic_enum/[>=0.9.5 <10]")
         self.requires("boost/1.85.0",force=True)

@@ -182,7 +182,7 @@ insertStruct (soci::session &sql, T const &structToInsert, bool foreignKeyConstr
       {
         if constexpr (IsVector<typename std::decay<decltype (boost::fusion::at_c<index> (structToInsert))>::type>)
           {
-            b.write (0, reinterpret_cast<char const *> (boost::fusion::at_c<index> (structToInsert).data ()), boost::fusion::at_c<index> (structToInsert).size ());
+            b.write_from_start (reinterpret_cast<char const *> (boost::fusion::at_c<index> (structToInsert).data ()), boost::fusion::at_c<index> (structToInsert).size ());
             st.exchange (soci::use (b));
           }
         else
@@ -313,7 +313,7 @@ findStruct (soci::session &sql, std::string const &columnName, Y const &value)
             if (auto blob = indexAndBlob.find (index); blob != indexAndBlob.end ())
               {
                 boost::fusion::at_c<index> (result) = typename std::decay<decltype (boost::fusion::at_c<index> (result))>::type (blob->second->get_len ());
-                blob->second->read (0, reinterpret_cast<char *> (boost::fusion::at_c<index> (result).data ()), blob->second->get_len ());
+                blob->second->read_from_start (reinterpret_cast<char *> (boost::fusion::at_c<index> (result).data ()), blob->second->get_len ());
               }
           }
       });
