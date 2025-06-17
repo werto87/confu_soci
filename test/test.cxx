@@ -585,7 +585,7 @@ SCENARIO ("create table for mpl list in database with createTables", "[createTab
     {
       try
         {
-          createTables<tables> (sql);
+          createTables<myTables> (sql);
           FAIL ("should throw exception but did not throw exception");
         }
       catch (soci::soci_error const &e)
@@ -607,7 +607,7 @@ SCENARIO ("drop tables for mpl list in database with dropTables", "[dropTables]"
     REQUIRE (doesTableExist<EasyClass> (sql));
     WHEN ("dropTables")
     {
-      REQUIRE_NOTHROW (dropTables<tables> (sql));
+      REQUIRE_NOTHROW (dropTables<myTables> (sql));
       THEN ("table does not exist") { REQUIRE (not doesTableExist<EasyClass> (sql)); }
     }
   }
@@ -619,7 +619,7 @@ SCENARIO ("drop tables for mpl list in database with dropTables", "[dropTables]"
     REQUIRE (not doesTableExist<EasyClass> (sql));
     WHEN ("dropTables")
     {
-      auto notDropedTables = dropTables<tables> (sql);
+      auto notDropedTables = dropTables<myTables> (sql);
       THEN ("did not drop table because it did not exist") { REQUIRE (notDropedTables.size () == 1); }
     }
   }
@@ -633,7 +633,7 @@ SCENARIO ("drop tables for mpl list in database with dropTables", "[dropTables]"
     REQUIRE (doesTableExist<Player> (sql));
     WHEN ("dropTables")
     {
-      auto notDropedTables = dropTables<tables> (sql);
+      auto notDropedTables = dropTables<myTables> (sql);
       THEN ("did not drop table EasyClass because it did not exist") { REQUIRE (notDropedTables.size () == 1); }
     }
   }

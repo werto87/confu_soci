@@ -88,7 +88,13 @@ template <typename T>
 std::string
 typeName (T const &)
 {
-  return boost::typeindex::type_id<T> ().pretty_name ();
+  auto struct_prefix = std::string{ "struct " };
+  auto class_prefix = std::string{ "class " };
+  auto name = boost::typeindex::type_id<T> ().pretty_name ();
+  if (name.compare (0, struct_prefix.size (), struct_prefix) == 0) name.erase (0, struct_prefix.size ());
+  else if (name.compare (0, class_prefix.size (), class_prefix) == 0)
+    name.erase (0, class_prefix.size ());
+  return name;
 }
 
 template <typename T> concept printable = requires (T t)
