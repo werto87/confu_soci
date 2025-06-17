@@ -207,7 +207,7 @@ insertStruct (soci::session &sql, T const &structToInsert, bool foreignKeyConstr
           sql << "PRAGMA foreign_keys = OFF;";
         }
     }
-  catch (std::exception const &e)
+  catch (std::exception const &)
     {
       if (foreignKeyConstraints && foreignKeysEnabled == 0)
         {
@@ -279,8 +279,8 @@ findStruct (soci::session &sql, std::string const &columnName, Y const &value)
   auto ss = std::stringstream{};
   ss << "SELECT * FROM " << tableName << " WHERE " << columnName << "=:value";
   auto result = T{};
-  auto indexAndBlob = std::map<u_int16_t, std::unique_ptr<soci::blob> >{};
-  boost::fusion::for_each (boost::mpl::range_c<int, 0, boost::fusion::result_of::size<T>::value> (), [&] (auto index) {
+  auto indexAndBlob = std::map<uint16_t, std::unique_ptr<soci::blob> >{};
+  boost::fusion::for_each (boost::mpl::range_c<uint16_t, 0, boost::fusion::result_of::size<T>::value> (), [&] (auto index) {
     if constexpr (IsVector<typename std::decay<decltype (boost::fusion::at_c<index> (result))>::type>)
       {
         indexAndBlob.insert (std::make_pair (index, std::make_unique<soci::blob> (sql)));
@@ -307,7 +307,7 @@ findStruct (soci::session &sql, std::string const &columnName, Y const &value)
   st.execute (true);
   if (sql.got_data ())
     {
-      boost::fusion::for_each (boost::mpl::range_c<int, 0, boost::fusion::result_of::size<T>::value> (), [&] (auto index) {
+      boost::fusion::for_each (boost::mpl::range_c<uint16_t, 0, boost::fusion::result_of::size<T>::value> (), [&] (auto index) {
         if constexpr (IsVector<typename std::decay<decltype (boost::fusion::at_c<index> (result))>::type>)
           {
             if (auto blob = indexAndBlob.find (index); blob != indexAndBlob.end ())
@@ -350,7 +350,7 @@ createTableForStruct (soci::session &sql, std::vector<std::tuple<std::string, st
       {
         databaseType = sociTypeMapping.at (memberTypeAsString);
       }
-    catch (std::exception const &e)
+    catch (std::exception const &)
       {
         databaseType = soci::data_type::dt_string;
       }
@@ -405,7 +405,7 @@ dropTables (soci::session &sql)
       {
         dropTableForStruct<T> (sql);
       }
-    catch (std::exception const &e)
+    catch (std::exception const &)
       {
         result.push_back (typeName (T{}));
       }

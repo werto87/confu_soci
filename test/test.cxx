@@ -70,6 +70,9 @@ BOOST_FUSION_DEFINE_STRUCT ((test), EasyClass, (std::string, playerId) (double, 
 
 BOOST_FUSION_DEFINE_STRUCT ((test), TableWithForignKeyToEasyClass, (std::string, id) (double, easyClassId))
 
+#pragma warning(push)
+#pragma warning(disable:4003)
+
 BOOST_FUSION_DEFINE_STRUCT ((), MyClass, (int, someInt))
 BOOST_FUSION_DEFINE_STRUCT ((test), NestedClass, (int, id) (MyClass, myClass) (MyClass, yourClass))
 BOOST_FUSION_DEFINE_STRUCT ((), Board, (std::string, id) (std::string, gameId))
@@ -78,7 +81,7 @@ BOOST_FUSION_DEFINE_STRUCT ((), MyVector, (unsigned long, id) (std::vector<uint8
 BOOST_FUSION_DEFINE_STRUCT ((), MyVectorStringId, (std::string, id) (std::vector<uint8_t>, someVector))
 
 BOOST_FUSION_DEFINE_STRUCT ((), MyVectorStringIdAndEnum, (std::string, id) (std::vector<uint8_t>, someVector) (Direction, direction))
-
+#pragma warning(pop)
 namespace soci
 {
 template <> struct type_conversion<MyClass>
@@ -563,11 +566,11 @@ SCENARIO ("create table for mpl list in database with createTables", "[createTab
   {
     resetTestDatabase ();
     soci::session sql (soci::sqlite3, pathToTestDatabase);
-    typedef boost::mpl::list<EasyClass> tables;
+    typedef boost::mpl::list<EasyClass> myTables;
     REQUIRE (not doesTableExist<EasyClass> (sql));
     WHEN ("createTables")
     {
-      REQUIRE_NOTHROW (createTables<tables> (sql));
+      REQUIRE_NOTHROW (createTables<myTables> (sql));
       THEN ("table does exist") { REQUIRE (doesTableExist<EasyClass> (sql)); }
     }
   }
@@ -575,7 +578,7 @@ SCENARIO ("create table for mpl list in database with createTables", "[createTab
   {
     resetTestDatabase ();
     soci::session sql (soci::sqlite3, pathToTestDatabase);
-    typedef boost::mpl::list<EasyClass> tables;
+    typedef boost::mpl::list<EasyClass> myTables;
     createTableForStruct<EasyClass> (sql);
     REQUIRE (doesTableExist<EasyClass> (sql));
     WHEN ("createTables")
@@ -599,7 +602,7 @@ SCENARIO ("drop tables for mpl list in database with dropTables", "[dropTables]"
   {
     resetTestDatabase ();
     soci::session sql (soci::sqlite3, pathToTestDatabase);
-    typedef boost::mpl::list<EasyClass> tables;
+    typedef boost::mpl::list<EasyClass> myTables;
     createTableForStruct<EasyClass> (sql);
     REQUIRE (doesTableExist<EasyClass> (sql));
     WHEN ("dropTables")
@@ -612,7 +615,7 @@ SCENARIO ("drop tables for mpl list in database with dropTables", "[dropTables]"
   {
     resetTestDatabase ();
     soci::session sql (soci::sqlite3, pathToTestDatabase);
-    typedef boost::mpl::list<EasyClass> tables;
+    typedef boost::mpl::list<EasyClass> myTables;
     REQUIRE (not doesTableExist<EasyClass> (sql));
     WHEN ("dropTables")
     {
@@ -624,7 +627,7 @@ SCENARIO ("drop tables for mpl list in database with dropTables", "[dropTables]"
   {
     resetTestDatabase ();
     soci::session sql (soci::sqlite3, pathToTestDatabase);
-    typedef boost::mpl::list<EasyClass, Player> tables;
+    typedef boost::mpl::list<EasyClass> myTables;
     REQUIRE (not doesTableExist<EasyClass> (sql));
     createTableForStruct<Player> (sql);
     REQUIRE (doesTableExist<Player> (sql));

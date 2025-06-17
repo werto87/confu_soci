@@ -20,6 +20,7 @@ target_link_libraries(confu_soci PUBLIC
         soci::soci
         magic_enum::magic_enum
         Boost::headers
+        Boost::serialization
         )
 
 target_include_directories(confu_soci
