@@ -70,18 +70,20 @@ BOOST_FUSION_DEFINE_STRUCT ((test), EasyClass, (std::string, playerId) (double, 
 
 BOOST_FUSION_DEFINE_STRUCT ((test), TableWithForignKeyToEasyClass, (std::string, id) (double, easyClassId))
 
-#pragma warning(push)
-#pragma warning(disable:4003)
-
+#ifdef _MSC_VER
+    #pragma warning(push)
+    #pragma warning(disable: 4003)
+#endif
 BOOST_FUSION_DEFINE_STRUCT ((), MyClass, (int, someInt))
 BOOST_FUSION_DEFINE_STRUCT ((test), NestedClass, (int, id) (MyClass, myClass) (MyClass, yourClass))
 BOOST_FUSION_DEFINE_STRUCT ((), Board, (std::string, id) (std::string, gameId))
 BOOST_FUSION_DEFINE_STRUCT ((), Game, (std::string, id))
 BOOST_FUSION_DEFINE_STRUCT ((), MyVector, (unsigned long, id) (std::vector<uint8_t>, someVector))
 BOOST_FUSION_DEFINE_STRUCT ((), MyVectorStringId, (std::string, id) (std::vector<uint8_t>, someVector))
-
 BOOST_FUSION_DEFINE_STRUCT ((), MyVectorStringIdAndEnum, (std::string, id) (std::vector<uint8_t>, someVector) (Direction, direction))
-#pragma warning(pop)
+#ifdef _MSC_VER
+    #pragma warning(pop)
+#endif
 namespace soci
 {
 template <> struct type_conversion<MyClass>
