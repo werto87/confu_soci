@@ -60,6 +60,12 @@ struct BoardElement
   float movementCostToMoveThroughVerticalOrHorizontal = 1.f;
 };
 }
+
+#ifdef _MSC_VER
+    #pragma warning(push)
+    #pragma warning(disable: 4003)
+#endif
+
 BOOST_FUSION_ADAPT_STRUCT (test::BoardElement, (unsigned long, id) (boost::optional<std::string>, playerId) (BoardElementType, boardElementType) (float, movementCostToMoveThroughVerticalOrHorizontal))
 
 BOOST_FUSION_DEFINE_STRUCT ((test), IdAndOptional, (unsigned long, id) (boost::optional<std::string>, optionalText))
@@ -70,10 +76,7 @@ BOOST_FUSION_DEFINE_STRUCT ((test), EasyClass, (std::string, playerId) (double, 
 
 BOOST_FUSION_DEFINE_STRUCT ((test), TableWithForignKeyToEasyClass, (std::string, id) (double, easyClassId))
 
-#ifdef _MSC_VER
-    #pragma warning(push)
-    #pragma warning(disable: 4003)
-#endif
+
 BOOST_FUSION_DEFINE_STRUCT ((), MyClass, (int, someInt))
 BOOST_FUSION_DEFINE_STRUCT ((test), NestedClass, (int, id) (MyClass, myClass) (MyClass, yourClass))
 BOOST_FUSION_DEFINE_STRUCT ((), Board, (std::string, id) (std::string, gameId))
