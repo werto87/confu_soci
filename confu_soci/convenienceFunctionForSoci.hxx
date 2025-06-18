@@ -74,25 +74,24 @@ namespace confu_soci
 
 template <typename T>
 std::string
+typeName (T const &)
+{
+  auto name = boost::typeindex::type_id<T> ().pretty_name ();
+  boost::algorithm::replace_all (name, "struct ", "");
+  boost::algorithm::replace_all (name, "class ", "");
+  return name;
+}
+
+template <typename T>
+std::string
 // only use this if your type is a simple user defined type with not template class something like namespace::MyType and you want to get MyType
 // does not work with templated types or something like std::string which is std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > and the result will be allocator<char> >
 typeNameWithOutNamespace (T const &)
 {
   auto fullName = std::vector<std::string>{};
-  auto typeWithNamespace = boost::typeindex::type_id<T> ().pretty_name ();
+  auto typeWithNamespace = typeName (T{});
   boost::algorithm::split (fullName, typeWithNamespace, boost::is_any_of ("::"));
   return fullName.back ();
-}
-
-
-template <typename T>
-std::string
-typeName (T const &)
-{
-  auto name = boost::typeindex::type_id<T> ().pretty_name ();
-  boost::algorithm::replace_all(name, "struct ", "");
-  boost::algorithm::replace_all(name, "class ", "");
-  return name;
 }
 
 template <typename T> concept printable = requires (T t)
@@ -338,6 +337,20 @@ doesTableExist (soci::session &sql)
   return doesTableExist (sql, typeNameWithOutNamespace (T{}));
 }
 
+template <typename T>
+soci::data_type
+getColumnDataType (soci::session &sql, std::size_t column_index)
+{
+  auto row = soci::row{};
+  sql << "SELECT * FROM " + typeNameWithOutNamespace (T{}) + " LIMIT 1", soci::into (row);
+  if (column_index >= row.size ())
+    {
+      throw std::out_of_range ("Column index is out of range.");
+    }
+  const soci::column_properties &props = row.get_properties (column_index);
+  return props.get_data_type (); // return the enum
+}
+
 template <FusionSequence T>
 void
 createTableForStruct (soci::session &sql, std::vector<std::tuple<std::string, std::string, std::string> > const &foreignKeys = {})
@@ -348,7 +361,7 @@ createTableForStruct (soci::session &sql, std::vector<std::tuple<std::string, st
   boost::fusion::for_each (boost::mpl::range_c<int, 0, boost::fusion::result_of::size<T>::value> (), [&] (auto index) {
     auto memberName = boost::fusion::extension::struct_member_name<T, index>::call ();
     auto memberTypeAsString = typeName (boost::fusion::at_c<index> (T{}));
-      const static auto sociTypeMapping = std::map<std::string, soci::data_type>{ { "std::string", soci::data_type::dt_string }, { "boost::optional<std::basic_string<char,std::char_traits<char>,std::allocator<char> > >", soci::data_type::dt_string }, { "boost::optional<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > >", soci::data_type::dt_string }, { "std::basic_string<char,std::char_traits<char>,std::allocator<char> >", soci::data_type::dt_string }, { "std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >", soci::data_type::dt_string }, { "date", soci::data_type::dt_date }, { "double", soci::data_type::dt_double }, { "int", soci::data_type::dt_integer }, { "boost::optional<long>", soci::data_type::dt_long_long }, { "long", soci::data_type::dt_long_long }, { "unsigned long", soci::data_type::dt_unsigned_long_long }, { "unsigned __int64", soci::data_type::dt_unsigned_long_long }, { "blob", soci::data_type::dt_blob }, { "xml", soci::data_type::dt_xml } };
+    const static auto sociTypeMapping = std::map<std::string, soci::data_type>{ { "std::string", soci::data_type::dt_string }, { "boost::optional<std::basic_string<char,std::char_traits<char>,std::allocator<char> > >", soci::data_type::dt_string }, { "boost::optional<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > >", soci::data_type::dt_string }, { "std::basic_string<char,std::char_traits<char>,std::allocator<char> >", soci::data_type::dt_string }, { "std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >", soci::data_type::dt_string }, { "date", soci::data_type::dt_date }, { "double", soci::data_type::dt_double }, { "int", soci::data_type::dt_integer }, { "boost::optional<long>", soci::data_type::dt_long_long }, { "long", soci::data_type::dt_long_long }, { "unsigned long", soci::data_type::dt_unsigned_long_long }, { "unsigned __int64", soci::data_type::dt_unsigned_long_long }, { "blob", soci::data_type::dt_blob }, { "xml", soci::data_type::dt_xml } };
     auto databaseType = soci::data_type::dt_string;
     try
       {
