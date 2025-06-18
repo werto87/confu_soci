@@ -62,8 +62,8 @@ struct BoardElement
 }
 
 #ifdef _MSC_VER
-    #pragma warning(push)
-    #pragma warning(disable: 4003)
+#pragma warning(push)
+#pragma warning(disable : 4003)
 #endif
 
 BOOST_FUSION_ADAPT_STRUCT (test::BoardElement, (unsigned long, id) (boost::optional<std::string>, playerId) (BoardElementType, boardElementType) (float, movementCostToMoveThroughVerticalOrHorizontal))
@@ -74,8 +74,9 @@ BOOST_FUSION_DEFINE_STRUCT ((test), Player, (std::string, playerId) (Direction, 
 
 BOOST_FUSION_DEFINE_STRUCT ((test), EasyClass, (std::string, playerId) (double, points))
 
-BOOST_FUSION_DEFINE_STRUCT ((test), TableWithForignKeyToEasyClass, (std::string, id) (double, easyClassId))
+BOOST_FUSION_DEFINE_STRUCT ((test), AllSupportedTypes, (std::string, stringType) (double, doubleType) (int, intType) (unsigned long, unsignedLongType) (long, longType))
 
+BOOST_FUSION_DEFINE_STRUCT ((test), TableWithForignKeyToEasyClass, (std::string, id) (double, easyClassId))
 
 BOOST_FUSION_DEFINE_STRUCT ((), MyClass, (int, someInt))
 BOOST_FUSION_DEFINE_STRUCT ((test), NestedClass, (int, id) (MyClass, myClass) (MyClass, yourClass))
@@ -85,7 +86,7 @@ BOOST_FUSION_DEFINE_STRUCT ((), MyVector, (unsigned long, id) (std::vector<uint8
 BOOST_FUSION_DEFINE_STRUCT ((), MyVectorStringId, (std::string, id) (std::vector<uint8_t>, someVector))
 BOOST_FUSION_DEFINE_STRUCT ((), MyVectorStringIdAndEnum, (std::string, id) (std::vector<uint8_t>, someVector) (Direction, direction))
 #ifdef _MSC_VER
-    #pragma warning(pop)
+#pragma warning(pop)
 #endif
 namespace soci
 {
@@ -142,11 +143,22 @@ SCENARIO ("create a table with createTableForStruct", "[createTableForStruct]")
   {
     resetTestDatabase ();
     soci::session sql (soci::sqlite3, pathToTestDatabase);
-    REQUIRE (not doesTableExist<EasyClass> (sql));
+    REQUIRE (not doesTableExist<AllSupportedTypes> (sql));
     WHEN ("the table is created")
     {
-      createTableForStruct<EasyClass> (sql);
-      THEN ("the table exists") { REQUIRE (doesTableExist<EasyClass> (sql)); }
+      createTableForStruct<AllSupportedTypes> (sql);
+      THEN ("table exists")
+      {
+        REQUIRE (doesTableExist<AllSupportedTypes> (sql));
+      }
+      THEN ("columns have correct type")
+      {
+        REQUIRE(getColumnDataType<AllSupportedTypes> (sql, 0)== soci::data_type::dt_string);
+        REQUIRE(getColumnDataType<AllSupportedTypes> (sql, 1)== soci::data_type::dt_double);
+        REQUIRE(getColumnDataType<AllSupportedTypes> (sql, 2)== soci::data_type::dt_integer);
+        REQUIRE(getColumnDataType<AllSupportedTypes> (sql, 3)== soci::data_type::dt_unsigned_long_long);
+        REQUIRE(getColumnDataType<AllSupportedTypes> (sql, 4)== soci::data_type::dt_long_long);
+      }
     }
   }
   GIVEN ("a connection to a database where the table exist")
