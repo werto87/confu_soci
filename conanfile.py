@@ -16,7 +16,6 @@ class Project(ConanFile):
         self.options["soci"].with_boost = True
         self.options["catch2"].with_main = True
         self.options["catch2"].with_benchmark = True
-        self.options["boost"].without_serialization=False
 
 
     def requirements(self):
