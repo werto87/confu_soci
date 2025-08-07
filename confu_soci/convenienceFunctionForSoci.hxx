@@ -178,7 +178,8 @@ insertStruct (soci::session &sql, T const &structToInsert, bool foreignKeyConstr
       }
     else
       {
-        if constexpr (IsVector<typename std::decay<decltype (boost::fusion::at_c<index> (structToInsert))>::type>)
+        using TypeToCheck=typename std::decay<decltype (boost::fusion::at_c<index> (structToInsert))>::type;
+        if constexpr (IsVector<TypeToCheck>)
           {
             auto &blob = blobList.emplace_back (soci::blob{ sql });
             blob.write_from_start (reinterpret_cast<char const *> (boost::fusion::at_c<index> (structToInsert).data ()), boost::fusion::at_c<index> (structToInsert).size ());
@@ -227,7 +228,8 @@ updateStruct (soci::session &sql, T const &structToUpdate, bool foreignKeyConstr
   ss << "UPDATE " << typeNameWithOutNamespace (structToUpdate) << " SET ";
   auto blobList = std::list<soci::blob>{}; // has to be list because of iterator invalidation when adding element
   boost::fusion::for_each (boost::mpl::range_c<int, 0, boost::fusion::result_of::size<T>::value> (), [&] (auto index) {
-    if constexpr (IsVector<typename std::decay<decltype (boost::fusion::at_c<index> (structToUpdate))>::type>)
+    using TypeToCheck=typename std::decay<decltype (boost::fusion::at_c<index> (structToUpdate))>::type;
+    if constexpr (IsVector<TypeToCheck>)
       {
         auto &blob = blobList.emplace_back (soci::blob{ sql });
         blob.write_from_start (reinterpret_cast<const char *> (boost::fusion::at_c<index> (structToUpdate).data ()), boost::fusion::at_c<index> (structToUpdate).size ());
