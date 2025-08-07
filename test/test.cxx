@@ -83,6 +83,7 @@ BOOST_FUSION_DEFINE_STRUCT ((), Game, (std::string, id))
 BOOST_FUSION_DEFINE_STRUCT ((), MyVector, (unsigned long, id) (std::vector<uint8_t>, someVector))
 BOOST_FUSION_DEFINE_STRUCT ((), MyVectorStringId, (std::string, id) (std::vector<uint8_t>, someVector))
 BOOST_FUSION_DEFINE_STRUCT ((), MyVectorStringIdAndEnum, (std::string, id) (std::vector<uint8_t>, someVector) (Direction, direction))
+BOOST_FUSION_DEFINE_STRUCT ((), MyVectorTwoVectors, (unsigned long, id) (std::vector<uint8_t>, someVector) (std::vector<uint8_t>, anotherVector))
 #ifdef _MSC_VER
 #pragma warning(pop)
 #endif
@@ -145,17 +146,14 @@ SCENARIO ("create a table with createTableForStruct", "[createTableForStruct]")
     WHEN ("the table is created")
     {
       createTableForStruct<AllSupportedTypes> (sql);
-      THEN ("table exists")
-      {
-        REQUIRE (doesTableExist<AllSupportedTypes> (sql));
-      }
+      THEN ("table exists") { REQUIRE (doesTableExist<AllSupportedTypes> (sql)); }
       THEN ("columns have correct type")
       {
-        REQUIRE(getColumnDataType<AllSupportedTypes> (sql, 0)== soci::data_type::dt_string);
-        REQUIRE(getColumnDataType<AllSupportedTypes> (sql, 1)== soci::data_type::dt_double);
-        REQUIRE(getColumnDataType<AllSupportedTypes> (sql, 2)== soci::data_type::dt_integer);
-        REQUIRE(getColumnDataType<AllSupportedTypes> (sql, 3)== soci::data_type::dt_unsigned_long_long);
-        REQUIRE(getColumnDataType<AllSupportedTypes> (sql, 4)== soci::data_type::dt_long_long);
+        REQUIRE (getColumnDataType<AllSupportedTypes> (sql, 0) == soci::data_type::dt_string);
+        REQUIRE (getColumnDataType<AllSupportedTypes> (sql, 1) == soci::data_type::dt_double);
+        REQUIRE (getColumnDataType<AllSupportedTypes> (sql, 2) == soci::data_type::dt_integer);
+        REQUIRE (getColumnDataType<AllSupportedTypes> (sql, 3) == soci::data_type::dt_unsigned_long_long);
+        REQUIRE (getColumnDataType<AllSupportedTypes> (sql, 4) == soci::data_type::dt_long_long);
       }
     }
   }
@@ -353,8 +351,40 @@ SCENARIO ("insert struct in database with insertStruct", "[insertStruct]")
         REQUIRE (myVec->someVector.size () == 1000000);
         REQUIRE (myVec->someVector.at (0) == 129);
       }
+      THEN ("update the vector in the table")
+      {
+        auto myVec = findStruct<MyVector> (sql, "id", 1);
+        REQUIRE (myVec.has_value ());
+        auto myVecValue = myVec.value ();
+        myVecValue.someVector = {};
+        updateStruct (sql, myVecValue);
+        auto myVecAfterUpdate = findStruct<MyVector> (sql, "id", 1);
+        REQUIRE (myVecAfterUpdate->someVector.size () == 0);
+      }
     }
   }
+
+  GIVEN ("a connection to a database where the table does exists")
+  {
+    resetTestDatabase ();
+    soci::session sql (soci::sqlite3, pathToTestDatabase);
+    confu_soci::createTableForStruct<MyVectorTwoVectors> (sql);
+    REQUIRE (doesTableExist<MyVectorTwoVectors> (sql));
+    WHEN ("record has two member who are vector of byte")
+    {
+      insertStruct (sql, MyVectorTwoVectors{ 1, std::vector<uint8_t>{ 0 }, std::vector<uint8_t>{ 1 } }, true, true);
+      THEN ("generated id is different from id in struct")
+      {
+        auto myVec = findStruct<MyVectorTwoVectors> (sql, "id", 1);
+        REQUIRE (myVec.has_value ());
+        REQUIRE (myVec->someVector.size () == 1);
+        REQUIRE (myVec->anotherVector.size () == 1);
+        REQUIRE (myVec->someVector.at (0) == 0);
+        REQUIRE (myVec->anotherVector.at (0) == 1);
+      }
+    }
+  }
+
   GIVEN ("a connection to a database where the table does exists")
   {
     resetTestDatabase ();
@@ -433,6 +463,32 @@ SCENARIO ("update struct in database with updateStruct", "[updateStruct]")
         {
           THEN ("throws exception") { REQUIRE (soci::soci_error::error_category::unknown == e.get_error_category ()); }
         }
+    }
+  }
+  GIVEN ("a connection to a database where the table does exists and has 2 byte vectors as member")
+  {
+    resetTestDatabase ();
+    soci::session sql (soci::sqlite3, pathToTestDatabase);
+    confu_soci::createTableForStruct<MyVectorTwoVectors> (sql);
+    REQUIRE (doesTableExist<MyVectorTwoVectors> (sql));
+    WHEN ("insert both vectors")
+    {
+      insertStruct (sql, MyVectorTwoVectors{ 1, std::vector<uint8_t>{ 0 }, std::vector<uint8_t>{ 1 } }, true, true);
+      THEN ("update the vector in the table")
+      {
+        auto myVec = findStruct<MyVectorTwoVectors> (sql, "id", 1);
+        REQUIRE (myVec.has_value ());
+        auto myVecValue = myVec.value ();
+        myVecValue.someVector = std::vector<uint8_t>{ 2 };
+        myVecValue.anotherVector = std::vector<uint8_t>{ 3 };
+        updateStruct (sql, myVecValue);
+        auto myVecAfterUpdate = findStruct<MyVectorTwoVectors> (sql, "id", 1);
+        REQUIRE (myVecAfterUpdate.has_value ());
+        REQUIRE (myVecAfterUpdate->someVector.size () == 1);
+        REQUIRE (myVecAfterUpdate->anotherVector.size () == 1);
+        REQUIRE (myVecAfterUpdate->someVector.at (0) == 2);
+        REQUIRE (myVecAfterUpdate->anotherVector.at (0) == 3);
+      }
     }
   }
 }

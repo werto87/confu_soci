@@ -94,12 +94,7 @@ typeNameWithOutNamespace (T const &)
   return fullName.back ();
 }
 
-template <typename T> concept printable = requires (T t)
-{
-  {
-    std::cout << t
-  } -> std::same_as<std::ostream &>;
-};
+template <typename T> concept printable = requires (T t) { { std::cout << t }->std::same_as<std::ostream &>; };
 template <FusionSequence T>
 std::string
 generateInsert (T const &structToInsert)
@@ -136,8 +131,8 @@ template <FusionSequence T>
 auto
 insertStruct (soci::session &sql, T const &structToInsert, bool foreignKeyConstraints = false, bool shouldGenerateId = false)
 {
-  soci::statement st (sql);
-  soci::blob b (sql);
+  auto st = soci::statement{ sql };
+  auto blobList = std::list<soci::blob>{}; // has to be list because of iterator invalidation when adding element
   st.alloc ();
   using IdType = std::remove_reference_t<decltype (boost::fusion::at_c<0> (structToInsert))>;
   auto id = IdType{};
@@ -185,8 +180,9 @@ insertStruct (soci::session &sql, T const &structToInsert, bool foreignKeyConstr
       {
         if constexpr (IsVector<typename std::decay<decltype (boost::fusion::at_c<index> (structToInsert))>::type>)
           {
-            b.write_from_start (reinterpret_cast<char const *> (boost::fusion::at_c<index> (structToInsert).data ()), boost::fusion::at_c<index> (structToInsert).size ());
-            st.exchange (soci::use (b));
+            auto &blob = blobList.emplace_back (soci::blob{ sql });
+            blob.write_from_start (reinterpret_cast<char const *> (boost::fusion::at_c<index> (structToInsert).data ()), boost::fusion::at_c<index> (structToInsert).size ());
+            st.exchange (soci::use (blob));
           }
         else
           {
@@ -229,8 +225,18 @@ updateStruct (soci::session &sql, T const &structToUpdate, bool foreignKeyConstr
   st.alloc ();
   auto ss = std::stringstream{};
   ss << "UPDATE " << typeNameWithOutNamespace (structToUpdate) << " SET ";
+  auto blobList = std::list<soci::blob>{}; // has to be list because of iterator invalidation when adding element
   boost::fusion::for_each (boost::mpl::range_c<int, 0, boost::fusion::result_of::size<T>::value> (), [&] (auto index) {
-    st.exchange (soci::use (boost::fusion::at_c<index> (structToUpdate)));
+    if constexpr (IsVector<typename std::decay<decltype (boost::fusion::at_c<index> (structToUpdate))>::type>)
+      {
+        auto &blob = blobList.emplace_back (soci::blob{ sql });
+        blob.write_from_start (reinterpret_cast<const char *> (boost::fusion::at_c<index> (structToUpdate).data ()), boost::fusion::at_c<index> (structToUpdate).size ());
+        st.exchange (soci::use (blob));
+      }
+    else
+      {
+        st.exchange (soci::use (boost::fusion::at_c<index> (structToUpdate)));
+      }
     ss << boost::fusion::extension::struct_member_name<T, index>::call ();
     ss << "=:";
     ss << boost::fusion::extension::struct_member_name<T, index>::call ();
