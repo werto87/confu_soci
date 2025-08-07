@@ -79,7 +79,7 @@ BOOST_FUSION_DEFINE_STRUCT ((test), TableWithForignKeyToEasyClass, (std::string,
 BOOST_FUSION_DEFINE_STRUCT ((), MyClass, (int, someInt))
 BOOST_FUSION_DEFINE_STRUCT ((), Board, (std::string, id) (std::string, gameId))
 BOOST_FUSION_DEFINE_STRUCT ((), Game, (std::string, id))
-BOOST_FUSION_DEFINE_STRUCT ((), MyVector, (unsigned long, id) (std::vector<uint8_t>, someVector))
+BOOST_FUSION_DEFINE_STRUCT ((), MyVector, (unsigned long, id) (std::vector<int>, someVector))
 BOOST_FUSION_DEFINE_STRUCT ((), MyVectorStringId, (std::string, id) (std::vector<uint8_t>, someVector))
 BOOST_FUSION_DEFINE_STRUCT ((), MyVectorStringIdAndEnum, (std::string, id) (std::vector<uint8_t>, someVector) (Direction, direction))
 BOOST_FUSION_DEFINE_STRUCT ((), MyVectorTwoVectors, (unsigned long, id) (std::vector<uint8_t>, someVector) (std::vector<uint8_t>, anotherVector))
@@ -342,7 +342,7 @@ SCENARIO ("insert struct in database with insertStruct", "[insertStruct]")
     REQUIRE (doesTableExist<MyVector> (sql));
     WHEN ("record has a member which is a vector of byte")
     {
-      insertStruct (sql, MyVector{ 1, std::vector<uint8_t> (1000000, 129) }, true, true);
+      insertStruct (sql, MyVector{ 1, std::vector<int> (1000000, 129) }, true, true);
       THEN ("generated id is different from id in struct")
       {
         auto myVec = findStruct<MyVector> (sql, "id", 1);
